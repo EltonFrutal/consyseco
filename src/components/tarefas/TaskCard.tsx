@@ -59,7 +59,9 @@ export function TaskCard({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <h4 className="min-w-0 break-words text-sm font-medium text-slate-900 dark:text-white">{tarefa.titulo}</h4>
+        <h4 className="min-w-0 truncate text-sm font-medium text-slate-900 dark:text-white" title={tarefa.titulo}>
+          {tarefa.titulo}
+        </h4>
         <span
           className={`mt-1 h-3 w-3 shrink-0 rounded-full ${prioridade.ponto}`}
           role="img"
@@ -69,48 +71,52 @@ export function TaskCard({
       </div>
 
       {tarefa.descricao && (
-        <p className="mt-1 line-clamp-2 break-words text-xs text-slate-500 dark:text-slate-400">{tarefa.descricao}</p>
+        <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400" title={tarefa.descricao}>
+          {tarefa.descricao}
+        </p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {responsavel && (
-          <span
-            className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300"
-            title={`Responsável: ${responsavel.name}`}
-          >
-            {responsavel.avatar_url ? (
-              <img src={responsavel.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
-            ) : (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                {iniciais(responsavel.name)}
-              </span>
-            )}
-            {responsavel.name.split(' ')[0]}
+      {responsavel && (
+        <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+          {responsavel.avatar_url ? (
+            <img src={responsavel.avatar_url} alt="" className="h-5 w-5 shrink-0 rounded-full object-cover" />
+          ) : (
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+              {iniciais(responsavel.name)}
+            </span>
+          )}
+          <span className="truncate" title={`Responsável: ${responsavel.name}`}>
+            {responsavel.name}
           </span>
-        )}
+        </div>
+      )}
 
-        {tarefa.prazo && (
+      {(solicitante || tarefa.prazo) && (
+        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
-              vencida
-                ? 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300'
-                : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
-            }`}
-            title={vencida ? 'Prazo vencido' : 'Prazo'}
+            className="min-w-0 truncate text-slate-400 dark:text-slate-500"
+            title={solicitante ? `Solicitante: ${solicitante.name}` : undefined}
           >
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-              <rect x="3" y="5" width="18" height="16" rx="2" />
-              <path d="M3 10h18M8 3v4M16 3v4" />
-            </svg>
-            {new Date(`${tarefa.prazo}T00:00:00`).toLocaleDateString('pt-BR')}
+            {solicitante ? solicitante.name : ''}
           </span>
-        )}
-      </div>
 
-      {solicitante && (
-        <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
-          Solicitante: {solicitante.name}
-        </p>
+          {tarefa.prazo && (
+            <span
+              className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 ${
+                vencida
+                  ? 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+              }`}
+              title={vencida ? 'Prazo vencido' : 'Prazo'}
+            >
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M3 10h18M8 3v4M16 3v4" />
+              </svg>
+              {new Date(`${tarefa.prazo}T00:00:00`).toLocaleDateString('pt-BR')}
+            </span>
+          )}
+        </div>
       )}
 
       {/* alternativa ao arrastar, que funciona no celular */}
