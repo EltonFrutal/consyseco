@@ -4,6 +4,7 @@ import { ProtectedRoute } from './routes/ProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { UsersPage } from './pages/UsersPage'
+import { TarefasPage } from './pages/TarefasPage'
 import { WhatsAppPage } from './pages/WhatsAppPage'
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/tarefas" element={<TarefasPage />} />
             <Route path="/usuarios" element={<UsersPage />} />
             <Route path="/integracoes/whatsapp" element={<WhatsAppPage />} />
           </Route>

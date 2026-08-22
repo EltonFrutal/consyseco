@@ -34,6 +34,17 @@ const navItems: NavItem[] = [
     ),
   },
   {
+    to: '/tarefas',
+    label: 'Tarefas',
+    icon: (
+      <svg {...iconProps}>
+        <rect x="3" y="4" width="18" height="17" rx="2" />
+        <path d="M3 9h18" />
+        <path d="M8 13h3M8 17h3M14 13h3M14 17h3" />
+      </svg>
+    ),
+  },
+  {
     to: '/usuarios',
     label: 'Usuários',
     icon: (

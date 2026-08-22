@@ -9,7 +9,7 @@ Padrões de UI e de banco detalhados vivem em [`docs/padroes.md`](docs/padroes.m
 
 - **O que é:** aplicação web de gestão de tarefas (nome do pacote: `tarefas`), em estágio inicial.
 - **Para quem:** uso interno; o acesso é fechado e todo usuário é criado por um administrador.
-- **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi**. O dashboard ainda é um esqueleto.
+- **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi** e o **kanban de tarefas** (cenários → colunas → tarefas). O dashboard ainda é um esqueleto.
 - **Modelo de acesso:** só existe o papel `admin` (`profiles.role` tem check `role in ('admin')`). Usuário desativado é banido no Auth **e** marcado como `disabled` no perfil.
 - **Idioma:** toda a interface e as mensagens de erro são em **português do Brasil**.
 
@@ -50,15 +50,16 @@ src/
     layout/       # AppLayout (sidebar + header), ThemeToggle
     ui/           # componentes genéricos (ConfirmDialog)
     users/        # UsersTable, UserFormModal
+    tarefas/      # TaskCard, TaskFormModal, CenarioManagerModal
     whatsapp/     # InstanceForm, QrConnect, ConnectedCard, DeleteInstanceDialog
   contexts/       # AuthContext (sessão + profile do usuário logado)
   hooks/          # useHasAdminUser
   lib/            # supabaseClient, authErrors (tradução de mensagens do Auth)
-  pages/          # LoginPage, DashboardPage, UsersPage, WhatsAppPage
+  pages/          # LoginPage, DashboardPage, UsersPage, TarefasPage, WhatsAppPage
   routes/         # ProtectedRoute
   types/          # profile.ts (à mão) e database.ts (gerado pelo Supabase)
 supabase/
-  migrations/     # 0001_init … 0005_whatsapp_instances, 0006_profiles_country_code
+  migrations/     # 0001_init … 0006_profiles_country_code, 0007_tarefas_kanban
   functions/
     admin-users/  # operações privilegiadas de usuário: create, update, set-status
     wa-instance-create|qr|status|delete/  # integração uazapi (uma função por operação)
@@ -206,6 +207,8 @@ Formato:
 - **Integração uazapi só via Edge Function.** O navegador nunca fala com a uazapi nem recebe token: `wa-instance-create/qr/status/delete` e `wa-send-test` validam a sessão, conferem `owner_id` e repassam a mensagem de erro real da API (preferindo `message_ptbr`).
 - **Token da uazapi guardado em coluna sem grant de leitura**, com colunas geradas `token_masked`/`admin_token_masked` (`••••1234`) como única forma de exibição.
 - **`wa-instance-create` aceita os dois tokens:** tenta `GET /instance/status` (token de instância) e, em 401/403, tenta `POST /instance/create` com `admintoken`; o admintoken é guardado para recriar a instância depois.
+- **Kanban modelado em três níveis:** `cenarios` (quadro) → `colunas` (etapas, cor guardada como token e não como classe Tailwind) → `tarefas`. Cenário novo já nasce com A fazer / Em andamento / Concluído por trigger; excluir cenário cascateia colunas e tarefas.
+- **Tarefas são compartilhadas entre admins ativos** — policies amarradas em `public.is_active_admin()`, não em `owner_id`, porque o quadro é do time. Diferente de `whatsapp_instances`, que é por dono.
 - **Tailwind 4 sem arquivo de config** — não recriar `tailwind.config.js` "para padronizar".
 - **Sem biblioteca de formulário/estado** — o projeto é pequeno; introduzir uma exige justificativa e aprovação.
 
