@@ -5,7 +5,7 @@ import { useState } from 'react'
  * logo: public/consys-logo.png · foto: public/foto-desenvolvedor.png
  */
 export const DESENVOLVEDOR = {
-  nome: 'Elton',
+  nome: 'Elton Gonçalves',
   logo: '/consys-logo.png',
   foto: '/foto-desenvolvedor.png',
   /** Só dígitos, com DDI: 55 + DDD 34 + número. */
@@ -56,14 +56,25 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
   }
 
   return (
-    <div className="mt-4 border-t border-slate-200 px-3 pt-3 dark:border-slate-700">
-      <p className="px-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+    <div className="mt-4 border-t border-slate-200 px-3 pt-4 dark:border-slate-700">
+      <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
         Desenvolvido por
       </p>
 
-      <div className="mt-2 flex items-center gap-2.5 rounded-xl bg-slate-50 p-2.5 dark:bg-slate-900/50">
+      <div className="mt-3 flex flex-col items-center gap-2 text-center">
+        {/* a logo é um selo redondo com fundo próprio: não precisa de placa branca */}
+        {!semLogo && (
+          <img
+            src={DESENVOLVEDOR.logo}
+            alt="ConSys Consultoria Empresarial"
+            title="ConSys Consultoria Empresarial"
+            onError={() => setSemLogo(true)}
+            className="h-16 w-16 rounded-full object-contain"
+          />
+        )}
+
         {semFoto ? (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
             {DESENVOLVEDOR.nome.trim().charAt(0).toUpperCase()}
           </span>
         ) : (
@@ -71,37 +82,24 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
             src={DESENVOLVEDOR.foto}
             alt={`Foto de ${DESENVOLVEDOR.nome}`}
             onError={() => setSemFoto(true)}
-            className="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"
+            className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"
           />
         )}
 
-        <div className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
-            {DESENVOLVEDOR.nome}
-          </span>
+        <span className="max-w-full truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+          {DESENVOLVEDOR.nome}
+        </span>
 
-          <a
-            href={linkWhatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-0.5 inline-flex items-center gap-1 rounded text-xs font-medium text-emerald-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400"
-            aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
-          >
-            <IconeWhatsapp className="h-3.5 w-3.5 shrink-0" />
-            {DESENVOLVEDOR.whatsappVisivel}
-          </a>
-        </div>
-
-        {/* a logo já é um selo redondo com fundo próprio: não precisa de placa branca */}
-        {!semLogo && (
-          <img
-            src={DESENVOLVEDOR.logo}
-            alt="ConSys Consultoria Empresarial"
-            title="ConSys Consultoria Empresarial"
-            onError={() => setSemLogo(true)}
-            className="h-8 w-8 shrink-0 rounded-full object-contain"
-          />
-        )}
+        <a
+          href={linkWhatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400"
+          aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
+        >
+          <IconeWhatsapp className="h-4 w-4 shrink-0" />
+          {DESENVOLVEDOR.whatsappVisivel}
+        </a>
       </div>
     </div>
   )
