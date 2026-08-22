@@ -70,7 +70,7 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
         )}
 
         {semFoto ? (
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 text-lg font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
             {DESENVOLVEDOR.nome.trim().charAt(0).toUpperCase()}
           </span>
         ) : (
@@ -78,7 +78,7 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
             src={DESENVOLVEDOR.foto}
             alt={`Foto de ${DESENVOLVEDOR.nome}`}
             onError={() => setSemFoto(true)}
-            className="h-10 w-10 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"
+            className="h-16 w-16 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"
           />
         )}
 
