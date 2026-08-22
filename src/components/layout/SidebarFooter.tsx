@@ -25,7 +25,7 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
 
   if (collapsed) {
     return (
-      <div className="mt-14 border-t border-slate-200 px-2 pt-4 dark:border-slate-700">
+      <div className="mt-auto shrink-0 border-t border-slate-200 px-2 py-4 dark:border-slate-700">
         <a
           href={linkWhatsapp}
           target="_blank"
@@ -41,7 +41,7 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
   }
 
   return (
-    <div className="mt-14 border-t border-slate-200 px-3 pt-5 dark:border-slate-700">
+    <div className="mt-auto shrink-0 border-t border-slate-200 px-3 pb-4 pt-4 dark:border-slate-700">
       <p className="text-center text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
         Desenvolvido por
       </p>
