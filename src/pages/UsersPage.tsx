@@ -12,6 +12,7 @@ export function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [modalUser, setModalUser] = useState<Profile | null | undefined>(undefined)
   const [statusTarget, setStatusTarget] = useState<Profile | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
 
   async function loadUsers() {
     setLoading(true)
@@ -41,10 +42,15 @@ export function UsersPage() {
 
   async function handleConfirmStatus() {
     if (!statusTarget) return
+    setStatusError(null)
     const nextStatus = statusTarget.status === 'active' ? 'disabled' : 'active'
-    await setUserStatus(statusTarget.id, nextStatus)
-    setStatusTarget(null)
-    await loadUsers()
+    try {
+      await setUserStatus(statusTarget.id, nextStatus)
+      setStatusTarget(null)
+      await loadUsers()
+    } catch (err) {
+      setStatusError(err instanceof Error ? err.message : 'Ocorreu um erro. Tente novamente.')
+    }
   }
 
   return (
@@ -64,11 +70,19 @@ export function UsersPage() {
         {loading ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">Carregando...</p>
         ) : (
-          <UsersTable users={users} onEdit={setModalUser} onToggleStatus={setStatusTarget} />
+          <UsersTable
+            users={users}
+            onEdit={setModalUser}
+            onToggleStatus={(user) => {
+              setStatusError(null)
+              setStatusTarget(user)
+            }}
+          />
         )}
       </div>
 
       <UserFormModal
+        key={modalUser === undefined ? 'closed' : (modalUser?.id ?? 'new')}
         open={modalUser !== undefined}
         initialData={modalUser ?? null}
         onClose={() => setModalUser(undefined)}
@@ -84,8 +98,12 @@ export function UsersPage() {
             : `Tem certeza que deseja reativar ${statusTarget?.name}?`
         }
         confirmLabel={statusTarget?.status === 'active' ? 'Desativar' : 'Reativar'}
+        error={statusError}
         onConfirm={handleConfirmStatus}
-        onCancel={() => setStatusTarget(null)}
+        onCancel={() => {
+          setStatusTarget(null)
+          setStatusError(null)
+        }}
       />
     </AppLayout>
   )

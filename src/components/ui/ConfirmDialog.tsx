@@ -3,11 +3,12 @@ interface ConfirmDialogProps {
   title: string
   description: string
   confirmLabel: string
+  error?: string | null
   onConfirm: () => void
   onCancel: () => void
 }
 
-export function ConfirmDialog({ open, title, description, confirmLabel, onConfirm, onCancel }: ConfirmDialogProps) {
+export function ConfirmDialog({ open, title, description, confirmLabel, error, onConfirm, onCancel }: ConfirmDialogProps) {
   if (!open) return null
 
   return (
@@ -15,6 +16,7 @@ export function ConfirmDialog({ open, title, description, confirmLabel, onConfir
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{description}</p>
+        {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
