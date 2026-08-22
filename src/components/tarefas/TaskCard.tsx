@@ -27,7 +27,6 @@ export function TaskCard({
   arrastando,
 }: TaskCardProps) {
   const responsavel = tarefa.responsavel_id ? pessoas.get(tarefa.responsavel_id) : undefined
-  const solicitante = tarefa.solicitante_id ? pessoas.get(tarefa.solicitante_id) : undefined
   const prioridade = PRIORIDADES[tarefa.prioridade]
 
   const hoje = new Date()
@@ -76,37 +75,30 @@ export function TaskCard({
         {tarefa.descricao || ' '}
       </p>
 
-      <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-        {responsavel ? (
-          <>
-            {responsavel.avatar_url ? (
-              <img src={responsavel.avatar_url} alt="" className="h-5 w-5 shrink-0 rounded-full object-cover" />
-            ) : (
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                {iniciais(responsavel.name)}
+      <div className="mt-3 flex min-h-6 items-center justify-between gap-2 text-xs">
+        <span className="flex min-w-0 items-center gap-1.5 text-slate-600 dark:text-slate-300">
+          {responsavel ? (
+            <>
+              {responsavel.avatar_url ? (
+                <img src={responsavel.avatar_url} alt="" className="h-5 w-5 shrink-0 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                  {iniciais(responsavel.name)}
+                </span>
+              )}
+              <span className="truncate" title={`Responsável: ${responsavel.name}`}>
+                {responsavel.name}
               </span>
-            )}
-            <span className="truncate" title={`Responsável: ${responsavel.name}`}>
-              {responsavel.name}
-            </span>
-          </>
-        ) : (
-          <>
-            <span
-              className="h-5 w-5 shrink-0 rounded-full border border-dashed border-slate-300 dark:border-slate-600"
-              aria-hidden="true"
-            />
-            <span className="truncate text-slate-400 dark:text-slate-500">Sem responsável</span>
-          </>
-        )}
-      </div>
-
-      <div className="mt-2 flex min-h-6 items-center justify-between gap-2 text-xs">
-        <span
-          className="min-w-0 truncate text-slate-400 dark:text-slate-500"
-          title={solicitante ? `Solicitante: ${solicitante.name}` : undefined}
-        >
-          {solicitante ? solicitante.name : ' '}
+            </>
+          ) : (
+            <>
+              <span
+                className="h-5 w-5 shrink-0 rounded-full border border-dashed border-slate-300 dark:border-slate-600"
+                aria-hidden="true"
+              />
+              <span className="truncate text-slate-400 dark:text-slate-500">Sem responsável</span>
+            </>
+          )}
         </span>
 
         {tarefa.prazo && (
