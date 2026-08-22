@@ -65,7 +65,7 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
             alt="ConSys"
             title="ConSys Consultoria Empresarial"
             onError={() => setSemLogo(true)}
-            className="h-7 w-auto"
+            className="h-14 w-auto"
           />
         )}
 
