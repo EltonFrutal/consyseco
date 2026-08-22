@@ -150,8 +150,8 @@ export function WhatsAppPage() {
 
   return (
     <AppLayout>
-      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6 dark:bg-slate-800">
-        <header className="mb-6">
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-sm sm:p-6 dark:bg-slate-800">
+        <header className="mb-4 shrink-0">
           <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Integração WhatsApp</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Conecte um número de WhatsApp via uazapi para enviar mensagens pelo sistema.

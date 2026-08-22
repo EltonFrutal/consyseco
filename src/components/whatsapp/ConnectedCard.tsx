@@ -109,9 +109,9 @@ export function ConnectedCard({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <div className="grid min-h-0 gap-4 lg:grid-cols-2">
+      <section className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">{instance.nome}</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -130,7 +130,7 @@ export function ConnectedCard({
           </span>
         </div>
 
-        <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-slate-500 dark:text-slate-400">Conectado em</dt>
             <dd className="text-slate-900 dark:text-white">
@@ -159,7 +159,7 @@ export function ConnectedCard({
           </p>
         )}
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={handleVerificar}
@@ -178,9 +178,9 @@ export function ConnectedCard({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
+      <section className="rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
         <h3 className="text-base font-semibold text-slate-900 dark:text-white">Testar conexão</h3>
-        <form onSubmit={handleEnviar} noValidate className="mt-4 max-w-lg space-y-4">
+        <form onSubmit={handleEnviar} noValidate className="mt-3 space-y-3">
           <div>
             <label className={labelClass} htmlFor="wa-destino">
               Número de destino
@@ -213,7 +213,7 @@ export function ConnectedCard({
             </label>
             <textarea
               id="wa-mensagem"
-              rows={3}
+              rows={2}
               value={mensagem}
               onChange={(e) => setMensagem(e.target.value)}
               className={inputClass}
