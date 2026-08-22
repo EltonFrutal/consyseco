@@ -9,7 +9,7 @@ Padrões de UI e de banco detalhados vivem em [`docs/padroes.md`](docs/padroes.m
 
 - **O que é:** aplicação web de gestão de tarefas (nome do pacote: `tarefas`), em estágio inicial.
 - **Para quem:** uso interno; o acesso é fechado e todo usuário é criado por um administrador.
-- **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi** e a tela **Mensagem** (montagem da mensagem; o envio ainda não está ligado). O dashboard ainda é um esqueleto.
+- **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi**. O dashboard ainda é um esqueleto.
 - **Modelo de acesso:** só existe o papel `admin` (`profiles.role` tem check `role in ('admin')`). Usuário desativado é banido no Auth **e** marcado como `disabled` no perfil.
 - **Idioma:** toda a interface e as mensagens de erro são em **português do Brasil**.
 
@@ -54,7 +54,7 @@ src/
   contexts/       # AuthContext (sessão + profile do usuário logado)
   hooks/          # useHasAdminUser
   lib/            # supabaseClient, authErrors (tradução de mensagens do Auth)
-  pages/          # LoginPage, DashboardPage, UsersPage, MensagemPage, WhatsAppPage
+  pages/          # LoginPage, DashboardPage, UsersPage, WhatsAppPage
   routes/         # ProtectedRoute
   types/          # profile.ts (à mão) e database.ts (gerado pelo Supabase)
 supabase/
