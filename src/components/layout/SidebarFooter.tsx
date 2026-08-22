@@ -69,33 +69,37 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
           />
         )}
 
-        {semFoto ? (
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 text-lg font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-            {DESENVOLVEDOR.nome.trim().charAt(0).toUpperCase()}
-          </span>
-        ) : (
-          <img
-            src={DESENVOLVEDOR.foto}
-            alt={`Foto de ${DESENVOLVEDOR.nome}`}
-            onError={() => setSemFoto(true)}
-            className="h-16 w-16 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"
-          />
-        )}
+        <div className="flex w-full items-center justify-center gap-3">
+          {semFoto ? (
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-200 text-lg font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+              {DESENVOLVEDOR.nome.trim().charAt(0).toUpperCase()}
+            </span>
+          ) : (
+            <img
+              src={DESENVOLVEDOR.foto}
+              alt={`Foto de ${DESENVOLVEDOR.nome}`}
+              onError={() => setSemFoto(true)}
+              className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"
+            />
+          )}
 
-        <span className="max-w-full truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
-          {DESENVOLVEDOR.nome}
-        </span>
+          <div className="min-w-0 text-left">
+            <span className="block truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+              {DESENVOLVEDOR.nome}
+            </span>
 
-        <a
-          href={linkWhatsapp}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400"
-          aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
-        >
-          <IconeWhatsapp className="h-4 w-4 shrink-0" />
-          {DESENVOLVEDOR.whatsappVisivel}
-        </a>
+            <a
+              href={linkWhatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-0.5 inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400"
+              aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
+            >
+              <IconeWhatsapp className="h-4 w-4 shrink-0" />
+              {DESENVOLVEDOR.whatsappVisivel}
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   )
