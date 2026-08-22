@@ -7,8 +7,8 @@ import { useState } from 'react'
  */
 export const DESENVOLVEDOR = {
   nome: 'Elton Gonçalves',
-  simbolo: '/consys-simbolo.png',
-  marca: '/consys-nome.png',
+  simbolo: '/consys_simbolo.png',
+  marca: '/consys_nome.png',
   assinatura: '/consys-tagline.png',
   foto: '/foto-desenvolvedor.png',
   /** Só dígitos, com DDI: 55 + DDD 34 + número. */
