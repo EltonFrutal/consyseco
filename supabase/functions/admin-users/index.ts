@@ -15,6 +15,15 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
+function translateError(message: string): string {
+  const map: Record<string, string> = {
+    'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres.',
+    'Unable to validate email address: invalid format': 'Formato de e-mail inválido.',
+    'User not found': 'Usuário não encontrado.',
+  }
+  return map[message] ?? message
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -68,7 +77,7 @@ Deno.serve(async (req) => {
     if (error) {
       const message = error.message.includes('already been registered')
         ? 'Este e-mail já está cadastrado.'
-        : error.message
+        : translateError(error.message)
       return jsonResponse({ error: message }, 409)
     }
 
@@ -94,7 +103,7 @@ Deno.serve(async (req) => {
     if (Object.keys(authAttrs).length > 0) {
       const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(userId, authAttrs)
       if (authUpdateError) {
-        return jsonResponse({ error: authUpdateError.message }, 400)
+        return jsonResponse({ error: translateError(authUpdateError.message) }, 400)
       }
     }
 
@@ -116,7 +125,7 @@ Deno.serve(async (req) => {
       ban_duration: status === 'disabled' ? '876000h' : 'none',
     })
     if (banError) {
-      return jsonResponse({ error: banError.message }, 400)
+      return jsonResponse({ error: translateError(banError.message) }, 400)
     }
 
     await adminClient
