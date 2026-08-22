@@ -168,17 +168,8 @@ export const CORES_COLUNA: Record<string, { rotulo: string; ponto: string; cabec
   },
 }
 
-export const PRIORIDADES: Record<Prioridade, { rotulo: string; classe: string }> = {
-  baixa: {
-    rotulo: 'Baixa',
-    classe: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
-  },
-  media: {
-    rotulo: 'Média',
-    classe: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
-  },
-  alta: {
-    rotulo: 'Alta',
-    classe: 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300',
-  },
+export const PRIORIDADES: Record<Prioridade, { rotulo: string; ponto: string }> = {
+  baixa: { rotulo: 'Baixa', ponto: 'bg-slate-400' },
+  media: { rotulo: 'Média', ponto: 'bg-amber-500' },
+  alta: { rotulo: 'Alta', ponto: 'bg-red-500' },
 }

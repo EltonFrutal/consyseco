@@ -60,9 +60,12 @@ export function TaskCard({
     >
       <div className="flex items-start justify-between gap-2">
         <h4 className="text-sm font-medium text-slate-900 dark:text-white">{tarefa.titulo}</h4>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${prioridade.classe}`}>
-          {prioridade.rotulo}
-        </span>
+        <span
+          className={`mt-1 h-3 w-3 shrink-0 rounded-full ${prioridade.ponto}`}
+          role="img"
+          aria-label={`Prioridade ${prioridade.rotulo.toLowerCase()}`}
+          title={`Prioridade ${prioridade.rotulo.toLowerCase()}`}
+        />
       </div>
 
       {tarefa.descricao && (
