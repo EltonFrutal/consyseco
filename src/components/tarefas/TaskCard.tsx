@@ -59,7 +59,7 @@ export function TaskCard({
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <h4 className="text-sm font-medium text-slate-900 dark:text-white">{tarefa.titulo}</h4>
+        <h4 className="min-w-0 break-words text-sm font-medium text-slate-900 dark:text-white">{tarefa.titulo}</h4>
         <span
           className={`mt-1 h-3 w-3 shrink-0 rounded-full ${prioridade.ponto}`}
           role="img"
@@ -69,7 +69,7 @@ export function TaskCard({
       </div>
 
       {tarefa.descricao && (
-        <p className="mt-1 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{tarefa.descricao}</p>
+        <p className="mt-1 line-clamp-2 break-words text-xs text-slate-500 dark:text-slate-400">{tarefa.descricao}</p>
       )}
 
       <div className="mt-3 flex flex-wrap items-center gap-2">

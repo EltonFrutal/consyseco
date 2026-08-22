@@ -213,7 +213,7 @@ export function TarefasPage() {
         )}
 
         {!carregando && colunas.length > 0 && (
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
             {colunas.map((coluna) => {
               const daColuna = tarefas.filter((t) => t.coluna_id === coluna.id)
               const cor = CORES_COLUNA[coluna.cor] ?? CORES_COLUNA.slate
@@ -232,7 +232,7 @@ export function TarefasPage() {
                     if (arrastada) handleMover(arrastada, coluna.id)
                     setArrastada(null)
                   }}
-                  className={`flex w-72 shrink-0 flex-col rounded-2xl border p-3 transition ${
+                  className={`flex min-w-0 flex-col rounded-2xl border p-3 transition ${
                     colunaAlvo === coluna.id
                       ? 'border-indigo-400 bg-indigo-50/50 dark:border-indigo-500 dark:bg-indigo-500/5'
                       : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40'
