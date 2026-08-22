@@ -70,54 +70,62 @@ export function TaskCard({
         />
       </div>
 
-      {tarefa.descricao && (
-        <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400" title={tarefa.descricao}>
-          {tarefa.descricao}
-        </p>
-      )}
+      {/* as linhas abaixo são sempre renderizadas — mesmo vazias — para que
+          todos os cartões tenham a mesma altura */}
+      <p className="mt-1 truncate text-xs text-slate-500 dark:text-slate-400" title={tarefa.descricao ?? undefined}>
+        {tarefa.descricao || ' '}
+      </p>
 
-      {responsavel && (
-        <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-          {responsavel.avatar_url ? (
-            <img src={responsavel.avatar_url} alt="" className="h-5 w-5 shrink-0 rounded-full object-cover" />
-          ) : (
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-              {iniciais(responsavel.name)}
+      <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
+        {responsavel ? (
+          <>
+            {responsavel.avatar_url ? (
+              <img src={responsavel.avatar_url} alt="" className="h-5 w-5 shrink-0 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                {iniciais(responsavel.name)}
+              </span>
+            )}
+            <span className="truncate" title={`Responsável: ${responsavel.name}`}>
+              {responsavel.name}
             </span>
-          )}
-          <span className="truncate" title={`Responsável: ${responsavel.name}`}>
-            {responsavel.name}
-          </span>
-        </div>
-      )}
-
-      {(solicitante || tarefa.prazo) && (
-        <div className="mt-2 flex items-center justify-between gap-2 text-xs">
-          <span
-            className="min-w-0 truncate text-slate-400 dark:text-slate-500"
-            title={solicitante ? `Solicitante: ${solicitante.name}` : undefined}
-          >
-            {solicitante ? solicitante.name : ''}
-          </span>
-
-          {tarefa.prazo && (
+          </>
+        ) : (
+          <>
             <span
-              className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 ${
-                vencida
-                  ? 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300'
-                  : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
-              }`}
-              title={vencida ? 'Prazo vencido' : 'Prazo'}
-            >
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-                <rect x="3" y="5" width="18" height="16" rx="2" />
-                <path d="M3 10h18M8 3v4M16 3v4" />
-              </svg>
-              {new Date(`${tarefa.prazo}T00:00:00`).toLocaleDateString('pt-BR')}
-            </span>
-          )}
-        </div>
-      )}
+              className="h-5 w-5 shrink-0 rounded-full border border-dashed border-slate-300 dark:border-slate-600"
+              aria-hidden="true"
+            />
+            <span className="truncate text-slate-400 dark:text-slate-500">Sem responsável</span>
+          </>
+        )}
+      </div>
+
+      <div className="mt-2 flex min-h-6 items-center justify-between gap-2 text-xs">
+        <span
+          className="min-w-0 truncate text-slate-400 dark:text-slate-500"
+          title={solicitante ? `Solicitante: ${solicitante.name}` : undefined}
+        >
+          {solicitante ? solicitante.name : ' '}
+        </span>
+
+        {tarefa.prazo && (
+          <span
+            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 ${
+              vencida
+                ? 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300'
+                : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+            }`}
+            title={vencida ? 'Prazo vencido' : 'Prazo'}
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M3 10h18M8 3v4M16 3v4" />
+            </svg>
+            {new Date(`${tarefa.prazo}T00:00:00`).toLocaleDateString('pt-BR')}
+          </span>
+        )}
+      </div>
 
       {/* alternativa ao arrastar, que funciona no celular */}
       <label className="sr-only" htmlFor={`mover-${tarefa.id}`}>
