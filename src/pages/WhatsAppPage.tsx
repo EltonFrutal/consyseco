@@ -4,6 +4,7 @@ import { InstanceForm } from '../components/whatsapp/InstanceForm'
 import { QrConnect } from '../components/whatsapp/QrConnect'
 import { ConnectedCard } from '../components/whatsapp/ConnectedCard'
 import { DeleteInstanceDialog } from '../components/whatsapp/DeleteInstanceDialog'
+import { AddButton } from '../components/ui/AddButton'
 import {
   WhatsAppError,
   createInstance,
@@ -196,16 +197,13 @@ export function WhatsAppPage() {
                 pode disparar mensagens para os contatos cadastrados.
               </p>
             </div>
-            <button
-              type="button"
+            <AddButton
               onClick={() => {
                 setErroForm(null)
                 setEstado('formulario')
               }}
-              className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mx-auto dark:focus:ring-offset-slate-900"
-            >
-              Criar nova instância
-            </button>
+              label="Criar nova instância"
+            />
           </div>
         )}
 

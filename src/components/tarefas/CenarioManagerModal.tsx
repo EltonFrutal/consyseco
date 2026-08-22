@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { AddButton } from '../ui/AddButton'
 import {
   CORES_COLUNA,
   criarColuna,
@@ -56,8 +57,8 @@ export function CenarioManagerModal({
     }
   }
 
-  async function handleNovoCenario(e: FormEvent) {
-    e.preventDefault()
+  async function handleNovoCenario(e?: FormEvent) {
+    e?.preventDefault()
     if (!novoCenario.trim()) return
     let criadoId = ''
     await executar(async () => {
@@ -68,8 +69,8 @@ export function CenarioManagerModal({
     if (criadoId) await onChanged(criadoId)
   }
 
-  async function handleNovaColuna(e: FormEvent) {
-    e.preventDefault()
+  async function handleNovaColuna(e?: FormEvent) {
+    e?.preventDefault()
     if (!novaColuna.trim() || !cenarioAtual) return
     await executar(async () => {
       await criarColuna(cenarioAtual.id, novaColuna.trim(), corColuna, colunas.length)
@@ -133,13 +134,7 @@ export function CenarioManagerModal({
                 placeholder="Comercial"
               />
             </div>
-            <button
-              type="submit"
-              disabled={ocupado}
-              className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
-            >
-              Adicionar
-            </button>
+            <AddButton onClick={() => handleNovoCenario()} label="Adicionar cenário" disabled={ocupado} />
           </form>
         </section>
 
@@ -208,13 +203,7 @@ export function CenarioManagerModal({
                   ))}
                 </select>
               </div>
-              <button
-                type="submit"
-                disabled={ocupado}
-                className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
-              >
-                Adicionar
-              </button>
+              <AddButton onClick={() => handleNovaColuna()} label="Adicionar coluna" disabled={ocupado} />
             </form>
           </section>
         )}

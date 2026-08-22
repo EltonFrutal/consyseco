@@ -3,6 +3,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { UsersTable } from '../components/users/UsersTable'
 import { UserFormModal } from '../components/users/UserFormModal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { AddButton } from '../components/ui/AddButton'
 import { supabase } from '../lib/supabaseClient'
 import { createUser, updateUser, setUserStatus } from '../api/adminUsers'
 import { uploadAvatar, removeStoredAvatars } from '../api/avatars'
@@ -93,13 +94,7 @@ export function UsersPage() {
       <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-800">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Usuários</h2>
-          <button
-            type="button"
-            onClick={() => setModalUser(null)}
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500"
-          >
-            Novo usuário
-          </button>
+<AddButton onClick={() => setModalUser(null)} label="Novo usuário" />
         </div>
 
         {loadError && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{loadError}</p>}

@@ -3,6 +3,7 @@ import { AppLayout } from '../components/layout/AppLayout'
 import { TaskCard } from '../components/tarefas/TaskCard'
 import { TaskFormModal } from '../components/tarefas/TaskFormModal'
 import { CenarioManagerModal } from '../components/tarefas/CenarioManagerModal'
+import { AddButton } from '../components/ui/AddButton'
 import { supabase } from '../lib/supabaseClient'
 import {
   CORES_COLUNA,
@@ -225,18 +226,11 @@ export function TarefasPage() {
               </svg>
             </button>
 
-            <button
-              type="button"
+<AddButton
               onClick={() => setModalTarefa(null)}
+              label="Nova tarefa"
               disabled={!cenarioAtual || colunas.length === 0}
-              className="flex h-11 w-11 items-center justify-center rounded-lg bg-indigo-600 text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-900"
-              aria-label="Nova tarefa"
-              title="Nova tarefa"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
+            />
           </div>
         </header>
 
@@ -259,13 +253,9 @@ export function TarefasPage() {
               Um cenário é um quadro (ex.: Comercial, Suporte). Ele já nasce com as colunas A fazer, Em
               andamento e Concluído, que você pode ajustar depois.
             </p>
-            <button
-              type="button"
-              onClick={() => setGerenciando(true)}
-              className="mt-4 min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900"
-            >
-              Criar primeiro cenário
-            </button>
+            <div className="mt-4 flex justify-center">
+              <AddButton onClick={() => setGerenciando(true)} label="Criar primeiro cenário" />
+            </div>
           </div>
         )}
 

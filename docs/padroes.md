@@ -34,6 +34,15 @@ A dica do embed é o **nome da coluna** — usar o nome da constraint (`profiles
 .select('*, updated_by_profile:updated_by(name)')
 ```
 
+## Botões
+
+- **Ação de incluir usa sempre o `AddButton`** (`src/components/ui/AddButton.tsx`): quadrado de 44px,
+  fundo indigo, somente o ícone de `+`, com `aria-label` e `title` descrevendo a ação
+  ("Novo usuário", "Nova tarefa", "Adicionar coluna"). Nunca escrever o texto no botão.
+- Demais ações de linha (editar, excluir, ativar/desativar) também são **somente ícone**,
+  com `aria-label` e `title`.
+- Botões de formulário dentro de modal (Salvar / Cancelar) continuam com texto.
+
 ## Listagens
 
 - Colunas de auditoria no fim da tabela: **Criado em**, **Alterado em** (data + hora), **Alterado por** (nome; `—` quando nulo).
