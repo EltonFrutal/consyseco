@@ -4,9 +4,10 @@ interface UsersTableProps {
   users: Profile[]
   onEdit: (user: Profile) => void
   onToggleStatus: (user: Profile) => void
+  currentUserId: string | undefined
 }
 
-export function UsersTable({ users, onEdit, onToggleStatus }: UsersTableProps) {
+export function UsersTable({ users, onEdit, onToggleStatus, currentUserId }: UsersTableProps) {
   return (
     <table className="w-full text-left text-sm">
       <thead>
@@ -41,9 +42,11 @@ export function UsersTable({ users, onEdit, onToggleStatus }: UsersTableProps) {
               <button type="button" onClick={() => onEdit(user)} className="mr-3 text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400">
                 Editar
               </button>
-              <button type="button" onClick={() => onToggleStatus(user)} className="text-sm font-medium text-red-600 hover:underline dark:text-red-400">
-                {user.status === 'active' ? 'Desativar' : 'Reativar'}
-              </button>
+              {user.id !== currentUserId && (
+                <button type="button" onClick={() => onToggleStatus(user)} className="text-sm font-medium text-red-600 hover:underline dark:text-red-400">
+                  {user.status === 'active' ? 'Desativar' : 'Reativar'}
+                </button>
+              )}
             </td>
           </tr>
         ))}

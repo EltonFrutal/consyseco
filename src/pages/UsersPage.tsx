@@ -5,18 +5,26 @@ import { UserFormModal } from '../components/users/UserFormModal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { supabase } from '../lib/supabaseClient'
 import { createUser, updateUser, setUserStatus } from '../api/adminUsers'
+import { useAuth } from '../contexts/AuthContext'
 import type { Profile } from '../types/profile'
 
 export function UsersPage() {
+  const { user } = useAuth()
   const [users, setUsers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
   const [modalUser, setModalUser] = useState<Profile | null | undefined>(undefined)
   const [statusTarget, setStatusTarget] = useState<Profile | null>(null)
   const [statusError, setStatusError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   async function loadUsers() {
     setLoading(true)
-    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: true })
+    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true })
+    if (error) {
+      setLoadError('Não foi possível carregar os usuários. Tente novamente.')
+    } else {
+      setLoadError(null)
+    }
     setUsers((data as Profile[]) ?? [])
     setLoading(false)
   }
@@ -67,16 +75,19 @@ export function UsersPage() {
           </button>
         </div>
 
+        {loadError && <p className="mb-4 text-sm text-red-600 dark:text-red-400">{loadError}</p>}
+
         {loading ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">Carregando...</p>
         ) : (
           <UsersTable
             users={users}
             onEdit={setModalUser}
-            onToggleStatus={(user) => {
+            onToggleStatus={(target) => {
               setStatusError(null)
-              setStatusTarget(user)
+              setStatusTarget(target)
             }}
+            currentUserId={user?.id}
           />
         )}
       </div>

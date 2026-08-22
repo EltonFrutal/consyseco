@@ -16,6 +16,9 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 function translateError(message: string): string {
+  if (message.includes('already been registered')) {
+    return 'Este e-mail já está cadastrado.'
+  }
   const map: Record<string, string> = {
     'Password should be at least 6 characters': 'A senha deve ter pelo menos 6 caracteres.',
     'Unable to validate email address: invalid format': 'Formato de e-mail inválido.',
@@ -75,10 +78,7 @@ Deno.serve(async (req) => {
     })
 
     if (error) {
-      const message = error.message.includes('already been registered')
-        ? 'Este e-mail já está cadastrado.'
-        : translateError(error.message)
-      return jsonResponse({ error: message }, 409)
+      return jsonResponse({ error: translateError(error.message) }, 409)
     }
 
     return jsonResponse({ user: data.user })
@@ -110,7 +110,10 @@ Deno.serve(async (req) => {
     const profileUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (name) profileUpdates.name = name
     if (email) profileUpdates.email = email
-    await adminClient.from('profiles').update(profileUpdates).eq('id', userId)
+    const { error: profileUpdateError } = await adminClient.from('profiles').update(profileUpdates).eq('id', userId)
+    if (profileUpdateError) {
+      return jsonResponse({ error: profileUpdateError.message }, 500)
+    }
 
     return jsonResponse({ success: true })
   }
@@ -121,6 +124,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'Parâmetros inválidos.' }, 400)
     }
 
+    if (userId === callerData.user.id) {
+      return jsonResponse({ error: 'Você não pode desativar sua própria conta.' }, 400)
+    }
+
     const { error: banError } = await adminClient.auth.admin.updateUserById(userId, {
       ban_duration: status === 'disabled' ? '876000h' : 'none',
     })
@@ -128,10 +135,13 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: translateError(banError.message) }, 400)
     }
 
-    await adminClient
+    const { error: profileStatusError } = await adminClient
       .from('profiles')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', userId)
+    if (profileStatusError) {
+      return jsonResponse({ error: profileStatusError.message }, 500)
+    }
 
     return jsonResponse({ success: true })
   }
