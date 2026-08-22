@@ -1,15 +1,9 @@
 import { useState } from 'react'
 
-/**
- * Dados de quem desenvolveu — troque aqui e nos arquivos de public/.
- * A logo é montada com três peças: símbolo + "ConSys" na primeira linha e
- * "Consultoria Empresarial" embaixo.
- */
+/** Dados de quem desenvolveu — troque aqui e nos arquivos de public/. */
 export const DESENVOLVEDOR = {
   nome: 'Elton Gonçalves',
-  simbolo: '/consys_simbolo.png',
   marca: '/consys_nome.png',
-  assinatura: '/consys-tagline.png',
   foto: '/foto-desenvolvedor.png',
   /** Só dígitos, com DDI: 55 + DDD 34 + número. */
   whatsapp: '5534999743931',
@@ -65,25 +59,14 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
       </p>
 
       <div className="mt-3 flex flex-col items-center gap-2 text-center">
-        {/* lockup da ConSys: símbolo + marca na primeira linha, assinatura embaixo.
-            Vai sobre placa branca porque a tipografia da marca é azul-escura. */}
         {!semLogo && (
-          <div className="w-full rounded-xl bg-white px-3 py-2.5">
-            <div className="flex items-center justify-center gap-2">
-              <img
-                src={DESENVOLVEDOR.simbolo}
-                alt=""
-                onError={() => setSemLogo(true)}
-                className="h-9 w-auto"
-              />
-              <img src={DESENVOLVEDOR.marca} alt="ConSys" className="h-6 w-auto" />
-            </div>
-            <img
-              src={DESENVOLVEDOR.assinatura}
-              alt="Consultoria Empresarial"
-              className="mx-auto mt-1.5 h-3 w-auto"
-            />
-          </div>
+          <img
+            src={DESENVOLVEDOR.marca}
+            alt="ConSys"
+            title="ConSys Consultoria Empresarial"
+            onError={() => setSemLogo(true)}
+            className="h-7 w-auto"
+          />
         )}
 
         {semFoto ? (
