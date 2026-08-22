@@ -1,10 +1,9 @@
 import { useState } from 'react'
 
-/** Dados de quem desenvolveu — troque aqui e nos arquivos de public/. */
+/** Dados de quem desenvolveu — troque aqui e no arquivo em public/. */
 export const DESENVOLVEDOR = {
   nome: 'Elton Gonçalves',
   marca: '/consys_nome.png',
-  foto: '/foto-desenvolvedor.png',
   /** Só dígitos, com DDI: 55 + DDD 34 + número. */
   whatsapp: '5534999743931',
   whatsappVisivel: '(34) 99974-3931',
@@ -20,9 +19,8 @@ function IconeWhatsapp({ className }: { className: string }) {
   )
 }
 
-/** Rodapé fixo do menu lateral com a assinatura de quem desenvolveu. */
+/** Assinatura de quem desenvolveu, no fim do menu lateral. */
 export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
-  const [semFoto, setSemFoto] = useState(false)
   const [semLogo, setSemLogo] = useState(false)
 
   if (collapsed) {
@@ -32,21 +30,11 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
           href={linkWhatsapp}
           target="_blank"
           rel="noopener noreferrer"
-          className="relative mx-auto flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:hover:bg-slate-700"
+          className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg text-emerald-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400 dark:hover:bg-slate-700"
           aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp`}
           title={`Desenvolvido por ${DESENVOLVEDOR.nome} · WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
         >
-          {semFoto ? (
-            <IconeWhatsapp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <img
-              src={DESENVOLVEDOR.foto}
-              alt=""
-              onError={() => setSemFoto(true)}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-          )}
-          <IconeWhatsapp className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-white text-emerald-600 dark:bg-slate-800 dark:text-emerald-400" />
+          <IconeWhatsapp className="h-5 w-5" />
         </a>
       </div>
     )
@@ -69,37 +57,20 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
           />
         )}
 
-        <div className="flex w-full items-center justify-center gap-3">
-          {semFoto ? (
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-200 text-lg font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-              {DESENVOLVEDOR.nome.trim().charAt(0).toUpperCase()}
-            </span>
-          ) : (
-            <img
-              src={DESENVOLVEDOR.foto}
-              alt={`Foto de ${DESENVOLVEDOR.nome}`}
-              onError={() => setSemFoto(true)}
-              className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-white dark:ring-slate-800"
-            />
-          )}
+        <span className="max-w-full truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
+          {DESENVOLVEDOR.nome}
+        </span>
 
-          <div className="min-w-0 text-left">
-            <span className="block truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
-              {DESENVOLVEDOR.nome}
-            </span>
-
-            <a
-              href={linkWhatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-0.5 inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400"
-              aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
-            >
-              <IconeWhatsapp className="h-4 w-4 shrink-0" />
-              {DESENVOLVEDOR.whatsappVisivel}
-            </a>
-          </div>
-        </div>
+        <a
+          href={linkWhatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded text-xs font-medium text-emerald-600 transition hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400"
+          aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
+        >
+          <IconeWhatsapp className="h-4 w-4 shrink-0" />
+          {DESENVOLVEDOR.whatsappVisivel}
+        </a>
       </div>
     </div>
   )
