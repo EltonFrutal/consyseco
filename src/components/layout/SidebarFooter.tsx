@@ -2,12 +2,12 @@ import { useState } from 'react'
 
 /**
  * Dados de quem desenvolveu — troque aqui e nos arquivos de public/.
- * logo: public/dev-logo.svg · foto: public/dev-foto.jpg
+ * logo: public/consys-logo.png · foto: public/foto-desenvolvedor.png
  */
 export const DESENVOLVEDOR = {
   nome: 'Elton',
-  logo: '/dev-logo.svg',
-  foto: '/dev-foto.jpg',
+  logo: '/consys-logo.png',
+  foto: '/foto-desenvolvedor.png',
   /** Só dígitos, com DDI: 55 + DDD 34 + número. */
   whatsapp: '5534999743931',
   whatsappVisivel: '(34) 99974-3931',
@@ -35,11 +35,21 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
           href={linkWhatsapp}
           target="_blank"
           rel="noopener noreferrer"
-          className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg text-emerald-600 transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+          className="relative mx-auto flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:hover:bg-slate-700"
           aria-label={`Falar com ${DESENVOLVEDOR.nome} no WhatsApp`}
           title={`Desenvolvido por ${DESENVOLVEDOR.nome} · WhatsApp ${DESENVOLVEDOR.whatsappVisivel}`}
         >
-          <IconeWhatsapp className="h-5 w-5" />
+          {semFoto ? (
+            <IconeWhatsapp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+          ) : (
+            <img
+              src={DESENVOLVEDOR.foto}
+              alt=""
+              onError={() => setSemFoto(true)}
+              className="h-8 w-8 rounded-full object-cover"
+            />
+          )}
+          <IconeWhatsapp className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-white text-emerald-600 dark:bg-slate-800 dark:text-emerald-400" />
         </a>
       </div>
     )
@@ -50,6 +60,17 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
       <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
         Desenvolvido por
       </p>
+
+      {!semLogo && (
+        <div className="mt-2 rounded-lg bg-white p-1.5 dark:bg-slate-100">
+          <img
+            src={DESENVOLVEDOR.logo}
+            alt="ConSys Consultoria Empresarial"
+            onError={() => setSemLogo(true)}
+            className="h-8 w-auto"
+          />
+        </div>
+      )}
 
       <div className="mt-2 flex items-center gap-2.5">
         {semFoto ? (
@@ -66,19 +87,9 @@ export function SidebarFooter({ collapsed }: { collapsed: boolean }) {
         )}
 
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5">
-            {!semLogo && (
-              <img
-                src={DESENVOLVEDOR.logo}
-                alt=""
-                onError={() => setSemLogo(true)}
-                className="h-4 w-4 shrink-0 rounded"
-              />
-            )}
-            <span className="truncate text-sm font-medium text-slate-700 dark:text-slate-200">
-              {DESENVOLVEDOR.nome}
-            </span>
-          </div>
+          <span className="block truncate text-sm font-medium text-slate-700 dark:text-slate-200">
+            {DESENVOLVEDOR.nome}
+          </span>
 
           <a
             href={linkWhatsapp}
