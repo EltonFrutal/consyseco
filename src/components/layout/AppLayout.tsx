@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from './ThemeToggle'
+import { SidebarFooter } from './SidebarFooter'
 
 interface NavItem {
   to: string
@@ -80,7 +81,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
       <aside
-        className={`shrink-0 border-r border-slate-200 bg-white transition-[width] duration-200 dark:border-slate-700 dark:bg-slate-800 ${
+        className={`flex shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 dark:border-slate-700 dark:bg-slate-800 ${
           collapsed ? 'w-16' : 'w-60'
         }`}
       >
@@ -124,6 +125,8 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </NavLink>
           ))}
         </nav>
+
+        <SidebarFooter collapsed={collapsed} />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
