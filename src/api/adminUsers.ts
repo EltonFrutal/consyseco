@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabaseClient'
 interface CreateUserInput {
   name: string
   email: string
+  phone: string
+  countryCode: string
   password: string
 }
 
@@ -11,6 +13,9 @@ interface UpdateUserInput {
   userId: string
   name?: string
   email?: string
+  phone?: string | null
+  countryCode?: string
+  avatarUrl?: string | null
   password?: string
 }
 
@@ -30,8 +35,8 @@ async function invoke(action: string, payload: object) {
   return data
 }
 
-export function createUser(input: CreateUserInput) {
-  return invoke('create', input)
+export function createUser(input: CreateUserInput): Promise<{ user: { id: string } }> {
+  return invoke('create', input) as Promise<{ user: { id: string } }>
 }
 
 export function updateUser(input: UpdateUserInput) {

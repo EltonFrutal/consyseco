@@ -1,53 +1,165 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from './ThemeToggle'
 
-const navItems = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/usuarios', label: 'Usuários' },
+interface NavItem {
+  to: string
+  label: string
+  icon: ReactNode
+}
+
+const iconProps = {
+  className: 'h-5 w-5 shrink-0',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.5,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+  viewBox: '0 0 24 24',
+}
+
+const navItems: NavItem[] = [
+  {
+    to: '/dashboard',
+    label: 'Dashboard',
+    icon: (
+      <svg {...iconProps}>
+        <rect x="3" y="3" width="7" height="9" rx="1.5" />
+        <rect x="14" y="3" width="7" height="5" rx="1.5" />
+        <rect x="14" y="12" width="7" height="9" rx="1.5" />
+        <rect x="3" y="16" width="7" height="5" rx="1.5" />
+      </svg>
+    ),
+  },
+  {
+    to: '/usuarios',
+    label: 'Usuários',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.9" />
+        <path d="M16 3.1a4 4 0 0 1 0 7.8" />
+      </svg>
+    ),
+  },
+  {
+    to: '/mensagem',
+    label: 'Mensagem',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
+  },
+  {
+    to: '/integracoes/whatsapp',
+    label: 'Integração WhatsApp',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.7-5.2A8.5 8.5 0 1 1 21 11.5z" />
+      </svg>
+    ),
+  },
 ]
+
+const STORAGE_KEY = 'sidebar-collapsed'
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, String(collapsed))
+  }, [collapsed])
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
-      <aside className="w-60 shrink-0 border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-        <div className="px-6 py-5 text-lg font-semibold text-slate-900 dark:text-white">Tarefas</div>
-        <nav className="mt-2 flex flex-col gap-1 px-3">
+      <aside
+        className={`shrink-0 border-r border-slate-200 bg-white transition-[width] duration-200 dark:border-slate-700 dark:bg-slate-800 ${
+          collapsed ? 'w-16' : 'w-60'
+        }`}
+      >
+        <div className={`flex items-center py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+          {!collapsed && <span className="text-lg font-semibold text-slate-900 dark:text-white">Tarefas</span>}
+          <button
+            type="button"
+            onClick={() => setCollapsed((v) => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:text-slate-400 dark:hover:bg-slate-700"
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            aria-expanded={!collapsed}
+            title={collapsed ? 'Expandir menu' : 'Recolher menu'}
+          >
+            <svg {...iconProps}>
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="M9 4v16" />
+              {collapsed ? <path d="M13 9l3 3-3 3" /> : <path d="M16 9l-3 3 3 3" />}
+            </svg>
+          </button>
+        </div>
+
+        <nav className={`mt-1 flex flex-col gap-1 ${collapsed ? 'px-2' : 'px-3'}`}>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
+              title={collapsed ? item.label : undefined}
               className={({ isActive }) =>
-                `rounded-lg px-3 py-2 text-sm font-medium transition ${
+                `flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                  collapsed ? 'justify-center px-0' : ''
+                } ${
                   isActive
                     ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300'
                     : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`
               }
             >
-              {item.label}
+              {item.icon}
+              {!collapsed && <span className="truncate">{item.label}</span>}
+              {collapsed && <span className="sr-only">{item.label}</span>}
             </NavLink>
           ))}
         </nav>
       </aside>
-      <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 dark:border-slate-700 dark:bg-slate-800">
-          <span className="text-sm text-slate-500 dark:text-slate-400">{profile?.name ?? 'Carregando...'}</span>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 sm:px-6 dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex min-w-0 items-center gap-3">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={`Foto de ${profile.name}`}
+                className="h-9 w-9 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                {profile?.name.trim().charAt(0).toUpperCase() ?? '?'}
+              </span>
+            )}
+            <span className="truncate text-sm text-slate-500 dark:text-slate-400">
+              {profile?.name ?? 'Carregando...'}
+            </span>
+          </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <button
               type="button"
               onClick={() => signOut()}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+              aria-label="Sair"
+              title="Sair"
             >
-              Sair
+              <svg {...iconProps}>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+              </svg>
             </button>
           </div>
         </header>
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
       </div>
     </div>
   )

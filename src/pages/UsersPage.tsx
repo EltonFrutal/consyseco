@@ -5,6 +5,8 @@ import { UserFormModal } from '../components/users/UserFormModal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { supabase } from '../lib/supabaseClient'
 import { createUser, updateUser, setUserStatus } from '../api/adminUsers'
+import { uploadAvatar, removeStoredAvatars } from '../api/avatars'
+import type { UserFormValues } from '../components/users/UserFormModal'
 import { useAuth } from '../contexts/AuthContext'
 import type { Profile } from '../types/profile'
 
@@ -19,7 +21,10 @@ export function UsersPage() {
 
   async function loadUsers() {
     setLoading(true)
-    const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true })
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*, updated_by_profile:updated_by(name)')
+      .order('created_at', { ascending: true })
     if (error) {
       setLoadError('Não foi possível carregar os usuários. Tente novamente.')
     } else {
@@ -33,16 +38,38 @@ export function UsersPage() {
     loadUsers()
   }, [])
 
-  async function handleSubmit(values: { name: string; email: string; password: string }) {
+  async function handleSubmit(values: UserFormValues) {
     if (modalUser) {
+      let avatarUrl: string | null | undefined
+      if (values.avatarFile) {
+        avatarUrl = await uploadAvatar(modalUser.id, values.avatarFile)
+      } else if (values.avatarRemoved) {
+        await removeStoredAvatars(modalUser.id)
+        avatarUrl = null
+      }
+
       await updateUser({
         userId: modalUser.id,
         name: values.name,
         email: values.email,
+        phone: values.phone.trim() || null,
+        countryCode: values.countryCode,
+        avatarUrl,
         password: values.password || undefined,
       })
     } else {
-      await createUser(values)
+      const created = await createUser({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        countryCode: values.countryCode,
+        password: values.password,
+      })
+
+      if (values.avatarFile && created?.user?.id) {
+        const avatarUrl = await uploadAvatar(created.user.id, values.avatarFile)
+        await updateUser({ userId: created.user.id, avatarUrl })
+      }
     }
     setModalUser(undefined)
     await loadUsers()

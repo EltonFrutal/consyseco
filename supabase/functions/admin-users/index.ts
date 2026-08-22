@@ -65,7 +65,13 @@ Deno.serve(async (req) => {
   const action = body.action as string
 
   if (action === 'create') {
-    const { name, email, password } = body as { name: string; email: string; password: string }
+    const { name, email, phone, countryCode, password } = body as {
+      name: string
+      email: string
+      phone?: string
+      countryCode?: string
+      password: string
+    }
     if (!name || !email || !password) {
       return jsonResponse({ error: 'Nome, e-mail e senha são obrigatórios.' }, 400)
     }
@@ -74,7 +80,7 @@ Deno.serve(async (req) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { name },
+      user_metadata: { name, phone: phone?.trim() || null, country_code: countryCode?.trim() || '55' },
     })
 
     if (error) {
@@ -85,10 +91,13 @@ Deno.serve(async (req) => {
   }
 
   if (action === 'update') {
-    const { userId, name, email, password } = body as {
+    const { userId, name, email, phone, countryCode, avatarUrl, password } = body as {
       userId: string
       name?: string
       email?: string
+      phone?: string | null
+      countryCode?: string
+      avatarUrl?: string | null
       password?: string
     }
     if (!userId) {
@@ -98,7 +107,13 @@ Deno.serve(async (req) => {
     const authAttrs: Record<string, unknown> = {}
     if (email) authAttrs.email = email
     if (password) authAttrs.password = password
-    if (name) authAttrs.user_metadata = { name }
+    if (name || phone !== undefined || countryCode) {
+      authAttrs.user_metadata = {
+        ...(name ? { name } : {}),
+        ...(phone !== undefined ? { phone: phone || null } : {}),
+        ...(countryCode ? { country_code: countryCode } : {}),
+      }
+    }
 
     if (Object.keys(authAttrs).length > 0) {
       const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(userId, authAttrs)
@@ -107,9 +122,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    const profileUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    const profileUpdates: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+      updated_by: callerData.user.id,
+    }
     if (name) profileUpdates.name = name
     if (email) profileUpdates.email = email
+    if (phone !== undefined) profileUpdates.phone = phone || null
+    if (countryCode) profileUpdates.country_code = countryCode
+    if (avatarUrl !== undefined) profileUpdates.avatar_url = avatarUrl || null
     const { error: profileUpdateError } = await adminClient.from('profiles').update(profileUpdates).eq('id', userId)
     if (profileUpdateError) {
       return jsonResponse({ error: profileUpdateError.message }, 500)
@@ -137,7 +158,7 @@ Deno.serve(async (req) => {
 
     const { error: profileStatusError } = await adminClient
       .from('profiles')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ status, updated_at: new Date().toISOString(), updated_by: callerData.user.id })
       .eq('id', userId)
     if (profileStatusError) {
       return jsonResponse({ error: profileStatusError.message }, 500)
