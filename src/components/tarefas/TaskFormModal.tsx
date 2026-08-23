@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { FinalizarError, finalizarTarefa, type Coluna, type Prioridade, type Tarefa, type TarefaInput } from '../../api/tarefas'
 import { CancelButton, DeleteButton, SaveButton } from '../ui/ActionButtons'
+import { FinalizarSenhaDialog } from './FinalizarSenhaDialog'
 import type { Profile } from '../../types/profile'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -55,7 +56,6 @@ export function TaskFormModal({
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
   const [pedindoSenha, setPedindoSenha] = useState(false)
-  const [senha, setSenha] = useState('')
   const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
 
   if (!open) return null
@@ -124,12 +124,12 @@ export function TaskFormModal({
     setPedindoSenha(true)
   }
 
-  async function handleFinalizar() {
+  async function handleFinalizar(senhaInformada?: string) {
     if (!tarefa) return
     setFinalizando(true)
     setErroFinalizar(null)
     try {
-      await finalizarTarefa(tarefa.id, senha || undefined)
+      await finalizarTarefa(tarefa.id, senhaInformada)
       await onFinalizada()
     } catch (err) {
       if (err instanceof FinalizarError) {
@@ -137,7 +137,6 @@ export function TaskFormModal({
       } else {
         setErroFinalizar('Não foi possível finalizar a tarefa.')
       }
-      setSenha('')
     } finally {
       setFinalizando(false)
     }
@@ -399,7 +398,7 @@ export function TaskFormModal({
               <span />
             )}
 
-            {podeFinalizar && !pedindoSenha && (
+            {podeFinalizar && (
               <button
                 type="button"
                 onClick={handleClickFinalizar}
@@ -419,58 +418,12 @@ export function TaskFormModal({
               </button>
             )}
 
-            {podeFinalizar && pedindoSenha && (
-              <div className="flex flex-1 flex-wrap items-center gap-2">
-                <label className="text-xs text-emerald-700 dark:text-emerald-400" htmlFor="tarefa-senha-responsavel">
-                  Senha de {nomeResponsavel ?? 'responsável'}:
-                </label>
-                <input
-                  id="tarefa-senha-responsavel"
-                  type="password"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      if (senha) handleFinalizar()
-                    }
-                  }}
-                  autoComplete="off"
-                  autoFocus
-                  className="h-11 w-40 rounded-lg border border-emerald-300 px-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
-                />
-                <button
-                  type="button"
-                  onClick={handleFinalizar}
-                  disabled={finalizando || !senha}
-                  className="flex h-11 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800"
-                >
-                  {finalizando ? 'Finalizando...' : 'Confirmar'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPedindoSenha(false)
-                    setSenha('')
-                    setErroFinalizar(null)
-                  }}
-                  className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
-                  aria-label="Desistir de finalizar"
-                  title="Desistir de finalizar"
-                >
-                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
             <div className="ml-auto flex gap-2">
               <CancelButton onClick={onClose} />
               <SaveButton disabled={salvando} label={salvando ? 'Salvando...' : 'Salvar'} />
             </div>
 
-            {erroFinalizar && (
+            {erroFinalizar && !pedindoSenha && (
               <p role="alert" className="w-full text-xs font-medium text-red-600 dark:text-red-400">
                 {erroFinalizar}
               </p>
@@ -491,6 +444,18 @@ export function TaskFormModal({
           )}
         </form>
       </div>
+
+      <FinalizarSenhaDialog
+        open={pedindoSenha}
+        nomeResponsavel={nomeResponsavel ?? 'o responsável'}
+        finalizando={finalizando}
+        erro={erroFinalizar}
+        onConfirmar={(senhaDigitada) => handleFinalizar(senhaDigitada)}
+        onCancelar={() => {
+          setPedindoSenha(false)
+          setErroFinalizar(null)
+        }}
+      />
     </div>
   )
 }
