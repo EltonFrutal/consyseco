@@ -18,6 +18,15 @@ interface TaskFormModalProps {
 const inputClass =
   'mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
 const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300'
+const inputErroClass =
+  'mt-1 block w-full rounded-lg border border-red-500 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-slate-800 dark:text-slate-100'
+const erroCampoClass = 'mt-1 text-xs text-red-600 dark:text-red-400'
+
+const PRIORIDADES_FORM = [
+  { valor: 'baixa' as const, rotulo: 'Baixa', ponto: 'bg-slate-400' },
+  { valor: 'media' as const, rotulo: 'Média', ponto: 'bg-amber-500' },
+  { valor: 'alta' as const, rotulo: 'Alta', ponto: 'bg-red-500' },
+]
 
 export function TaskFormModal({
   open,
@@ -40,6 +49,7 @@ export function TaskFormModal({
   const [prazo, setPrazo] = useState(tarefa?.prazo ?? '')
   const [prioridade, setPrioridade] = useState<Prioridade>(tarefa?.prioridade ?? 'media')
   const [erro, setErro] = useState<string | null>(null)
+  const [campos, setCampos] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
@@ -59,12 +69,18 @@ export function TaskFormModal({
     e.preventDefault()
     setErro(null)
 
-    if (!titulo.trim()) {
-      setErro('Informe o título da tarefa.')
-      return
-    }
-    if (!colunaId) {
-      setErro('Cadastre ao menos uma coluna neste cenário.')
+    const faltando: Record<string, string> = {}
+    if (!titulo.trim()) faltando.titulo = 'Informe o título.'
+    if (!descricao.trim()) faltando.descricao = 'Informe a descrição.'
+    if (!solicitanteId) faltando.solicitante = 'Escolha o solicitante.'
+    if (!responsavelId) faltando.responsavel = 'Escolha o responsável.'
+    if (!executorId) faltando.executor = 'Escolha o executor.'
+    if (!prazo) faltando.prazo = 'Informe o prazo.'
+    if (!colunaId) faltando.coluna = 'Escolha a etapa.'
+
+    setCampos(faltando)
+    if (Object.keys(faltando).length > 0) {
+      setErro('Preencha todos os campos para salvar.')
       return
     }
 
@@ -139,9 +155,17 @@ export function TaskFormModal({
                   type="text"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
-                  className={inputClass}
+                  className={campos.titulo ? inputErroClass : inputClass}
+                  aria-invalid={Boolean(campos.titulo)}
+                  aria-describedby={campos.titulo ? "tarefa-titulo-erro" : undefined}
                   autoFocus
                 />
+              
+                {campos.titulo && (
+                  <p id="tarefa-titulo-erro" className={erroCampoClass}>
+                    {campos.titulo}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -153,8 +177,16 @@ export function TaskFormModal({
                   rows={7}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
-                  className={inputClass}
+                  className={campos.descricao ? inputErroClass : inputClass}
+                  aria-invalid={Boolean(campos.descricao)}
+                  aria-describedby={campos.descricao ? "tarefa-descricao-erro" : undefined}
                 />
+              
+                {campos.descricao && (
+                  <p id="tarefa-descricao-erro" className={erroCampoClass}>
+                    {campos.descricao}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -167,7 +199,9 @@ export function TaskFormModal({
                   id="tarefa-solicitante"
                   value={solicitanteId}
                   onChange={(e) => setSolicitanteId(e.target.value)}
-                  className={inputClass}
+                  className={campos.solicitante ? inputErroClass : inputClass}
+                  aria-invalid={Boolean(campos.solicitante)}
+                  aria-describedby={campos.solicitante ? "tarefa-solicitante-erro" : undefined}
                 >
                   <option value="">Ninguém</option>
                   {pessoas.map((pessoa) => (
@@ -176,6 +210,12 @@ export function TaskFormModal({
                     </option>
                   ))}
                 </select>
+              
+                {campos.solicitante && (
+                  <p id="tarefa-solicitante-erro" className={erroCampoClass}>
+                    {campos.solicitante}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -186,7 +226,9 @@ export function TaskFormModal({
                   id="tarefa-responsavel"
                   value={responsavelId}
                   onChange={(e) => setResponsavelId(e.target.value)}
-                  className={inputClass}
+                  className={campos.responsavel ? inputErroClass : inputClass}
+                  aria-invalid={Boolean(campos.responsavel)}
+                  aria-describedby={campos.responsavel ? "tarefa-responsavel-erro" : undefined}
                 >
                   <option value="">Ninguém</option>
                   {pessoas.map((pessoa) => (
@@ -195,6 +237,12 @@ export function TaskFormModal({
                     </option>
                   ))}
                 </select>
+              
+                {campos.responsavel && (
+                  <p id="tarefa-responsavel-erro" className={erroCampoClass}>
+                    {campos.responsavel}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -205,7 +253,9 @@ export function TaskFormModal({
                   id="tarefa-executor"
                   value={executorId}
                   onChange={(e) => setExecutorId(e.target.value)}
-                  className={inputClass}
+                  className={campos.executor ? inputErroClass : inputClass}
+                  aria-invalid={Boolean(campos.executor)}
+                  aria-describedby={campos.executor ? "tarefa-executor-erro" : undefined}
                 >
                   <option value="">Ninguém</option>
                   {pessoas.map((pessoa) => (
@@ -214,9 +264,15 @@ export function TaskFormModal({
                     </option>
                   ))}
                 </select>
+              
+                {campos.executor && (
+                  <p id="tarefa-executor-erro" className={erroCampoClass}>
+                    {campos.executor}
+                  </p>
+                )}
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className={labelClass} htmlFor="tarefa-prazo">
                     Prazo
@@ -226,25 +282,17 @@ export function TaskFormModal({
                     type="date"
                     value={prazo}
                     onChange={(e) => setPrazo(e.target.value)}
-                    className={inputClass}
+                    className={campos.prazo ? inputErroClass : inputClass}
+                  aria-invalid={Boolean(campos.prazo)}
+                  aria-describedby={campos.prazo ? "tarefa-prazo-erro" : undefined}
                   />
-                </div>
-
-                <div>
-                  <label className={labelClass} htmlFor="tarefa-prioridade">
-                    Prioridade
-                  </label>
-                  <select
-                    id="tarefa-prioridade"
-                    value={prioridade}
-                    onChange={(e) => setPrioridade(e.target.value as Prioridade)}
-                    className={inputClass}
-                  >
-                    <option value="baixa">Baixa</option>
-                    <option value="media">Média</option>
-                    <option value="alta">Alta</option>
-                  </select>
-                </div>
+                
+                {campos.prazo && (
+                  <p id="tarefa-prazo-erro" className={erroCampoClass}>
+                    {campos.prazo}
+                  </p>
+                )}
+              </div>
 
                 <div>
                   <label className={labelClass} htmlFor="tarefa-coluna">
@@ -254,7 +302,9 @@ export function TaskFormModal({
                     id="tarefa-coluna"
                     value={colunaId}
                     onChange={(e) => setColunaId(e.target.value)}
-                    className={inputClass}
+                    className={campos.coluna ? inputErroClass : inputClass}
+                  aria-invalid={Boolean(campos.coluna)}
+                  aria-describedby={campos.coluna ? "tarefa-coluna-erro" : undefined}
                   >
                     {colunas.map((coluna) => (
                       <option key={coluna.id} value={coluna.id}>
@@ -262,8 +312,42 @@ export function TaskFormModal({
                       </option>
                     ))}
                   </select>
-                </div>
+                
+                {campos.coluna && (
+                  <p id="tarefa-coluna-erro" className={erroCampoClass}>
+                    {campos.coluna}
+                  </p>
+                )}
               </div>
+              </div>
+
+                <div>
+                  <span className={labelClass}>Prioridade</span>
+                  <div className="mt-1 flex gap-1" role="radiogroup" aria-label="Prioridade">
+                    {PRIORIDADES_FORM.map((item) => {
+                      const ativo = prioridade === item.valor
+                      return (
+                        <button
+                          key={item.valor}
+                          type="button"
+                          role="radio"
+                          aria-checked={ativo}
+                          onClick={() => setPrioridade(item.valor)}
+                          title={item.rotulo}
+                          className={`flex h-10 flex-1 items-center justify-center rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                            ativo
+                              ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
+                              : 'border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          <span className={`h-3 w-3 rounded-full ${item.ponto}`} aria-hidden="true" />
+                          <span className="sr-only">{item.rotulo}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
             </div>
           </div>
 
