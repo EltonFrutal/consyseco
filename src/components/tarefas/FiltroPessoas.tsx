@@ -33,7 +33,7 @@ export function FiltroPessoas({
   const temSetas = pessoas.length > VISIVEIS
 
   return (
-    <div className="rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-700/40">
+    <div className="-my-2 rounded-xl bg-slate-50 px-3 py-2 dark:bg-slate-700/40">
       <div className="flex gap-1">
         {(['responsavel', 'executor'] as const).map((valor) => (
           <button
