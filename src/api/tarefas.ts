@@ -164,9 +164,39 @@ export async function criarTarefa(input: TarefaInput & { ordem?: number }): Prom
   return assert(data as Tarefa | null, error)
 }
 
-export async function atualizarTarefa(id: string, input: Partial<TarefaInput> & { ordem?: number }) {
-  const { error } = await supabase.from('tarefas').update(input).eq('id', id)
-  if (error) throw new Error(error.message)
+/** Campos que só o responsável altera (o servidor repete a regra). */
+export const CAMPOS_RESTRITOS = [
+  'titulo',
+  'solicitante_id',
+  'responsavel_id',
+  'executor_id',
+  'prazo',
+] as const
+
+/**
+ * Salva a edição pela edge function: ela decide se exige a senha do
+ * responsável. Etapa, prioridade e descrição passam sem senha.
+ */
+export async function atualizarTarefa(
+  id: string,
+  input: Partial<TarefaInput>,
+  senha?: string,
+): Promise<Tarefa> {
+  const { data, error } = await supabase.functions.invoke('salvar-tarefa', {
+    body: { id, ...input, senha },
+  })
+
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      const corpo = (await error.context.json().catch(() => null)) as
+        | { error?: string; senhaObrigatoria?: boolean }
+        | null
+      throw new FinalizarError(corpo?.error ?? error.message, Boolean(corpo?.senhaObrigatoria))
+    }
+    throw new FinalizarError(error.message, false)
+  }
+
+  return (data as { tarefa: Tarefa }).tarefa
 }
 
 export async function excluirTarefa(id: string): Promise<void> {

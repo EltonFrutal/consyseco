@@ -66,6 +66,7 @@ supabase/
     wa-send-test/ # envio de mensagem de teste pela instância do usuário
     finalizar-tarefa/ # finaliza a tarefa validando a senha do responsável
     reabrir-tarefa/   # devolve a tarefa finalizada para a primeira etapa
+    salvar-tarefa/    # edição com regra de dono (campos restritos ao responsável)
 docs/padroes.md   # padrões de UI e de auditoria
 ```
 
@@ -214,6 +215,7 @@ Formato:
 - **Kanban modelado em três níveis:** `cenarios` (quadro) → `colunas` (etapas, cor guardada como token e não como classe Tailwind) → `tarefas`. Cenário novo já nasce com A fazer / Em andamento / Concluído por trigger; excluir cenário cascateia colunas e tarefas.
 - **Tarefas são compartilhadas entre admins ativos** — policies amarradas em `public.is_active_admin()`, não em `owner_id`, porque o quadro é do time. Diferente de `whatsapp_instances`, que é por dono.
 - **Concluir ≠ finalizar.** `data_conclusao` é preenchida/zerada por trigger quando a tarefa entra ou sai da coluna marcada com `is_conclusao`; `finalizada_em` só é gravada pela edge function `finalizar-tarefa`, que exige ser o responsável ou a senha dele. Tarefa finalizada some do quadro.
+- **Edição de tarefa tem dois níveis**: etapa, prioridade e descrição qualquer admin ativo altera (grant direto na tabela); título, solicitante, responsável, executor e prazo só o responsável — quem não é precisa da senha dele, via `salvar-tarefa`. O banco garante: `authenticated` só tem `update` nas colunas livres.
 - **Reabrir tem a mesma regra de finalizar**: só o responsável, e quem não é precisa da senha dele (`reabrir-tarefa`). A tarefa volta para a primeira coluna do cenário e o trigger zera a data de conclusão.
 - **`tarefas.numero`** é um sequencial legível (o uuid não serve para conversar); é exibido como `#12` na edição e na lista de finalizadas, com o uuid no `title`.
 - **A coluna de conclusão é marcada com `colunas.is_conclusao`**, não pelo nome — cada cenário pode chamar a etapa final do que quiser.

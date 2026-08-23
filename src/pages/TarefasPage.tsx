@@ -109,9 +109,9 @@ export function TarefasPage() {
 
   const cenarioAtual = cenarios.find((c) => c.id === cenarioId) ?? null
 
-  async function handleSalvarTarefa(input: TarefaInput) {
+  async function handleSalvarTarefa(input: TarefaInput, senha?: string) {
     if (modalTarefa) {
-      await atualizarTarefa(modalTarefa.id, input)
+      await atualizarTarefa(modalTarefa.id, input, senha)
     } else {
       const ordem = tarefas.filter((t) => t.coluna_id === input.coluna_id).length
       await criarTarefa({ ...input, ordem })

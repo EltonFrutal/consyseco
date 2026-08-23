@@ -1,5 +1,13 @@
 import { useState, type FormEvent } from 'react'
-import { FinalizarError, finalizarTarefa, type Coluna, type Prioridade, type Tarefa, type TarefaInput } from '../../api/tarefas'
+import {
+  CAMPOS_RESTRITOS,
+  FinalizarError,
+  finalizarTarefa,
+  type Coluna,
+  type Prioridade,
+  type Tarefa,
+  type TarefaInput,
+} from '../../api/tarefas'
 import { CancelButton, DeleteButton, SaveButton } from '../ui/ActionButtons'
 import { SenhaResponsavelDialog } from './SenhaResponsavelDialog'
 import type { Profile } from '../../types/profile'
@@ -12,7 +20,7 @@ interface TaskFormModalProps {
   pessoas: Profile[]
   tarefa: Tarefa | null
   onClose: () => void
-  onSubmit: (input: TarefaInput) => Promise<void>
+  onSubmit: (input: TarefaInput, senha?: string) => Promise<void>
   onDelete: (tarefa: Tarefa) => Promise<void>
   onFinalizada: () => Promise<void>
 }
@@ -56,6 +64,7 @@ export function TaskFormModal({
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
   const [pedindoSenha, setPedindoSenha] = useState(false)
+  const [pedindoSenhaSalvar, setPedindoSenhaSalvar] = useState(false)
   const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
 
   if (!open) return null
@@ -66,6 +75,10 @@ export function TaskFormModal({
   const souOResponsavel = Boolean(tarefa?.responsavel_id && tarefa.responsavel_id === user?.id)
   const nomeResponsavel = pessoas.find((p) => p.id === tarefa?.responsavel_id)?.name
   const quemAlterou = pessoas.find((p) => p.id === tarefa?.updated_by)?.name
+  const avisoRestrito =
+    editando && !souOResponsavel
+      ? `Alterar este campo exige a senha de ${nomeResponsavel ?? 'o responsável'}`
+      : undefined
 
   /** Todos os campos são obrigatórios — vale para salvar e para finalizar. */
   function validarCampos(acao: 'salvar' | 'finalizar'): boolean {
@@ -87,30 +100,59 @@ export function TaskFormModal({
     return true
   }
 
+  function montarInput(): TarefaInput {
+    return {
+      cenario_id: cenarioId,
+      coluna_id: colunaId,
+      titulo: titulo.trim(),
+      descricao: descricao.trim() || null,
+      solicitante_id: solicitanteId || null,
+      responsavel_id: responsavelId || null,
+      executor_id: executorId || null,
+      prazo: prazo || null,
+      prioridade,
+    }
+  }
+
+  /** Título, solicitante, responsável, executor e prazo são do responsável. */
+  function mudouCampoRestrito(): boolean {
+    if (!tarefa) return false
+    const input = montarInput() as unknown as Record<string, unknown>
+    const original = tarefa as unknown as Record<string, unknown>
+    return CAMPOS_RESTRITOS.some((campo) => (input[campo] ?? null) !== (original[campo] ?? null))
+  }
+
+  async function salvar(senha?: string) {
+    setSalvando(true)
+    setErro(null)
+    try {
+      await onSubmit(montarInput(), senha)
+      setPedindoSenhaSalvar(false)
+    } catch (err) {
+      if (err instanceof FinalizarError && err.senhaObrigatoria) {
+        setPedindoSenhaSalvar(true)
+        setErro(senha ? err.message : null)
+      } else {
+        setErro(err instanceof Error ? err.message : 'Não foi possível salvar a tarefa.')
+      }
+    } finally {
+      setSalvando(false)
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setErro(null)
 
     if (!validarCampos('salvar')) return
 
-    setSalvando(true)
-    try {
-      await onSubmit({
-        cenario_id: cenarioId,
-        coluna_id: colunaId,
-        titulo: titulo.trim(),
-        descricao: descricao.trim() || null,
-        solicitante_id: solicitanteId || null,
-        responsavel_id: responsavelId || null,
-        executor_id: executorId || null,
-        prazo: prazo || null,
-        prioridade,
-      })
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não foi possível salvar a tarefa.')
-    } finally {
-      setSalvando(false)
+    // quem não é o responsável precisa da senha dele para mexer nos campos restritos
+    if (editando && !souOResponsavel && mudouCampoRestrito()) {
+      setPedindoSenhaSalvar(true)
+      return
     }
+
+    await salvar()
   }
 
   function handleClickFinalizar() {
@@ -181,6 +223,7 @@ export function TaskFormModal({
                 </label>
                 <input
                   id="tarefa-titulo"
+                  title={avisoRestrito}
                   type="text"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
@@ -224,6 +267,7 @@ export function TaskFormModal({
                 </label>
                 <select
                   id="tarefa-solicitante"
+                  title={avisoRestrito}
                   value={solicitanteId}
                   onChange={(e) => setSolicitanteId(e.target.value)}
                   className={campos.solicitante ? inputErroClass : inputClass}
@@ -250,6 +294,7 @@ export function TaskFormModal({
                 </label>
                 <select
                   id="tarefa-responsavel"
+                  title={avisoRestrito}
                   value={responsavelId}
                   onChange={(e) => setResponsavelId(e.target.value)}
                   className={campos.responsavel ? inputErroClass : inputClass}
@@ -276,6 +321,7 @@ export function TaskFormModal({
                 </label>
                 <select
                   id="tarefa-executor"
+                  title={avisoRestrito}
                   value={executorId}
                   onChange={(e) => setExecutorId(e.target.value)}
                   className={campos.executor ? inputErroClass : inputClass}
@@ -306,6 +352,7 @@ export function TaskFormModal({
               </label>
               <input
                 id="tarefa-prazo"
+                  title={avisoRestrito}
                 type="date"
                 value={prazo}
                 onChange={(e) => setPrazo(e.target.value)}
@@ -454,6 +501,20 @@ export function TaskFormModal({
           )}
         </form>
       </div>
+
+      <SenhaResponsavelDialog
+        open={pedindoSenhaSalvar}
+        titulo="Alterar tarefa"
+        acao="alterar estes campos de"
+        nomeResponsavel={nomeResponsavel ?? 'o responsável'}
+        processando={salvando}
+        erro={erro}
+        onConfirmar={(senhaDigitada) => salvar(senhaDigitada)}
+        onCancelar={() => {
+          setPedindoSenhaSalvar(false)
+          setErro(null)
+        }}
+      />
 
       <SenhaResponsavelDialog
         open={pedindoSenha}
