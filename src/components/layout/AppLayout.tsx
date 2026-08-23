@@ -97,6 +97,13 @@ const STORAGE_KEY = 'sidebar-collapsed'
  * O menu depende do aplicativo aberto: na tela de início não há itens, e
  * dentro de um app o primeiro item é sempre o caminho de volta.
  */
+/** O título da barra acompanha o aplicativo aberto. */
+function tituloDaRota(pathname: string): string {
+  if (pathname.startsWith('/inicio')) return 'Início'
+  if (pathname.startsWith('/dashboard')) return 'Painel Gerencial'
+  return 'Tarefas'
+}
+
 function menuDaRota(pathname: string): NavItem[] {
   if (pathname.startsWith('/inicio')) return []
   // usuários e integração pertencem ao app Tarefas, apesar da rota própria
@@ -109,6 +116,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
   const { pathname } = useLocation()
   const navItems = menuDaRota(pathname)
+  const titulo = tituloDaRota(pathname)
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')
 
   useEffect(() => {
@@ -123,7 +131,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
         }`}
       >
         <div className={`flex items-center py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
-          {!collapsed && <span className="text-lg font-semibold text-slate-900 dark:text-white">Tarefas</span>}
+          {!collapsed && (
+            <span className="truncate text-lg font-semibold text-slate-900 dark:text-white">{titulo}</span>
+          )}
           <button
             type="button"
             onClick={() => setCollapsed((v) => !v)}
