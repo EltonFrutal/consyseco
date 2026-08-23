@@ -67,10 +67,8 @@ export function TaskFormModal({
   const nomeResponsavel = pessoas.find((p) => p.id === tarefa?.responsavel_id)?.name
   const quemAlterou = pessoas.find((p) => p.id === tarefa?.updated_by)?.name
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    setErro(null)
-
+  /** Todos os campos são obrigatórios — vale para salvar e para finalizar. */
+  function validarCampos(acao: 'salvar' | 'finalizar'): boolean {
     const faltando: Record<string, string> = {}
     if (!titulo.trim()) faltando.titulo = 'Informe o título.'
     if (!descricao.trim()) faltando.descricao = 'Informe a descrição.'
@@ -82,9 +80,18 @@ export function TaskFormModal({
 
     setCampos(faltando)
     if (Object.keys(faltando).length > 0) {
-      setErro('Preencha todos os campos para salvar.')
-      return
+      setErro(`Preencha todos os campos para ${acao}.`)
+      return false
     }
+    setErro(null)
+    return true
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    setErro(null)
+
+    if (!validarCampos('salvar')) return
 
     setSalvando(true)
     try {
@@ -108,6 +115,7 @@ export function TaskFormModal({
 
   function handleClickFinalizar() {
     setErroFinalizar(null)
+    if (!validarCampos('finalizar')) return
     if (souOResponsavel) {
       handleFinalizar()
       return
