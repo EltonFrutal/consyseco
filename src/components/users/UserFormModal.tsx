@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { validateAvatar } from '../../api/avatars'
+import { CancelButton, SaveButton } from '../ui/ActionButtons'
 import type { Profile } from '../../types/profile'
 
 export interface UserFormValues {
@@ -207,21 +208,9 @@ export function UserFormModal({ open, initialData, onClose, onSubmit }: UserForm
             />
           </div>
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-60"
-            >
-              {submitting ? 'Salvando...' : 'Salvar'}
-            </button>
+          <div className="flex justify-end gap-2 pt-2">
+            <CancelButton onClick={onClose} />
+            <SaveButton disabled={submitting} label={submitting ? 'Salvando...' : 'Salvar'} />
           </div>
         </form>
       </div>
