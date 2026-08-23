@@ -271,7 +271,7 @@ export function TaskFormModal({
           </div>
 
           {/* prazo, etapa e prioridade dividem uma linha só, abaixo da descrição */}
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className={labelClass} htmlFor="tarefa-prazo">
                 Prazo
@@ -321,7 +321,7 @@ export function TaskFormModal({
               <span className={labelClass} id="rotulo-prioridade">
                 Prioridade
               </span>
-              <div className="mt-1 flex gap-1.5" role="radiogroup" aria-labelledby="rotulo-prioridade">
+              <div className="mt-1 flex gap-2" role="radiogroup" aria-labelledby="rotulo-prioridade">
                 {PRIORIDADES_FORM.map((item) => {
                   const ativo = prioridade === item.valor
                   return (
@@ -332,7 +332,7 @@ export function TaskFormModal({
                       aria-checked={ativo}
                       onClick={() => setPrioridade(item.valor)}
                       title={item.rotulo}
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                      className={`flex h-10 flex-1 items-center justify-center rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                         ativo
                           ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
                           : 'border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'
@@ -415,7 +415,7 @@ export function TaskFormModal({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3 pt-1">
+          <div className="flex items-center justify-between gap-3 pt-4">
             {editando ? (
               <DeleteButton onClick={() => setConfirmandoExclusao(true)} label="Excluir tarefa" />
             ) : (
