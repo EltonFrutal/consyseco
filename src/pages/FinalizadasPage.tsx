@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
 import { supabase } from '../lib/supabaseClient'
-import { PRIORIDADES, listarFinalizadas, type Tarefa } from '../api/tarefas'
+import { FinalizarError, PRIORIDADES, listarFinalizadas, reabrirTarefa, type Tarefa } from '../api/tarefas'
+import { SenhaResponsavelDialog } from '../components/tarefas/SenhaResponsavelDialog'
+import { useAuth } from '../contexts/AuthContext'
 import type { Profile } from '../types/profile'
 
 type CampoData = 'conclusao' | 'finalizacao'
@@ -15,6 +17,7 @@ function formatar(valor: string | null) {
 }
 
 export function FinalizadasPage() {
+  const { user } = useAuth()
   const [tarefas, setTarefas] = useState<Tarefa[]>([])
   const [pessoas, setPessoas] = useState<Profile[]>([])
   const [carregando, setCarregando] = useState(true)
@@ -24,6 +27,9 @@ export function FinalizadasPage() {
   const [campoData, setCampoData] = useState<CampoData>('finalizacao')
   const [de, setDe] = useState('')
   const [ate, setAte] = useState('')
+  const [reabrindo, setReabrindo] = useState<Tarefa | null>(null)
+  const [processando, setProcessando] = useState(false)
+  const [erroReabrir, setErroReabrir] = useState<string | null>(null)
 
   const carregar = useCallback(async () => {
     setCarregando(true)
@@ -45,6 +51,37 @@ export function FinalizadasPage() {
   useEffect(() => {
     carregar()
   }, [campoData, de, ate])
+
+  async function executarReabertura(tarefa: Tarefa, senha?: string) {
+    setProcessando(true)
+    setErroReabrir(null)
+    try {
+      await reabrirTarefa(tarefa.id, senha)
+      setReabrindo(null)
+      await carregar()
+    } catch (err) {
+      const mensagem = err instanceof FinalizarError ? err.message : 'Não foi possível reabrir a tarefa.'
+      if (err instanceof FinalizarError && err.senhaObrigatoria) {
+        // pede a senha do responsável em modal próprio
+        setReabrindo(tarefa)
+        setErroReabrir(senha ? mensagem : null)
+      } else {
+        setErroReabrir(mensagem)
+        setErro(mensagem)
+      }
+    } finally {
+      setProcessando(false)
+    }
+  }
+
+  function handleReabrir(tarefa: Tarefa) {
+    if (tarefa.responsavel_id && tarefa.responsavel_id === user?.id) {
+      executarReabertura(tarefa)
+      return
+    }
+    setErroReabrir(null)
+    setReabrindo(tarefa)
+  }
 
   const mapaPessoas = useMemo(() => new Map(pessoas.map((p) => [p.id, p])), [pessoas])
 
@@ -157,17 +194,22 @@ export function FinalizadasPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                  <th className="py-2 font-medium">#</th>
                   <th className="py-2 font-medium">Tarefa</th>
                   <th className="py-2 font-medium">Solicitante</th>
                   <th className="py-2 font-medium">Responsável</th>
                   <th className="py-2 font-medium">Executor</th>
                   <th className="py-2 font-medium">Concluída em</th>
                   <th className="py-2 font-medium">Finalizada em</th>
+                  <th className="py-2 font-medium text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filtradas.map((tarefa) => (
                   <tr key={tarefa.id} className="border-b border-slate-100 dark:border-slate-800">
+                    <td className="py-3 font-mono text-xs text-slate-400 dark:text-slate-500" title={tarefa.id}>
+                      {tarefa.numero}
+                    </td>
                     <td className="max-w-xs py-3">
                       <span className="flex items-center gap-2">
                         <span
@@ -186,6 +228,21 @@ export function FinalizadasPage() {
                     <td className="py-3 text-slate-600 dark:text-slate-300">{nomeDe(tarefa.executor_id)}</td>
                     <td className="py-3 text-slate-600 dark:text-slate-300">{formatar(tarefa.data_conclusao)}</td>
                     <td className="py-3 text-slate-600 dark:text-slate-300">{formatar(tarefa.finalizada_em)}</td>
+                    <td className="py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleReabrir(tarefa)}
+                        disabled={processando}
+                        className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 dark:bg-amber-500/10 dark:text-amber-300"
+                        aria-label={`Reabrir a tarefa ${tarefa.titulo} e devolver para A fazer`}
+                        title="Voltar para A fazer"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M3 12a9 9 0 1 0 3-6.7" />
+                          <path d="M3 4v5h5" />
+                        </svg>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -193,6 +250,23 @@ export function FinalizadasPage() {
           </div>
         )}
       </div>
+
+      <SenhaResponsavelDialog
+        open={reabrindo !== null}
+        titulo="Reabrir tarefa"
+        acao="reabrir"
+        nomeResponsavel={
+          (reabrindo?.responsavel_id ? mapaPessoas.get(reabrindo.responsavel_id)?.name : null) ??
+          'o responsável'
+        }
+        processando={processando}
+        erro={erroReabrir}
+        onConfirmar={(senha) => reabrindo && executarReabertura(reabrindo, senha)}
+        onCancelar={() => {
+          setReabrindo(null)
+          setErroReabrir(null)
+        }}
+      />
     </AppLayout>
   )
 }

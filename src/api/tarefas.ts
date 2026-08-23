@@ -23,6 +23,7 @@ export interface Coluna {
 
 export interface Tarefa {
   id: string
+  numero: number
   cenario_id: string
   coluna_id: string
   titulo: string
@@ -54,7 +55,7 @@ export interface TarefaInput {
 }
 
 const TAREFA_COLUNAS =
-  'id, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, ordem, data_conclusao, finalizada_em, finalizada_por, created_at, updated_at, updated_by'
+  'id, numero, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, ordem, data_conclusao, finalizada_em, finalizada_por, created_at, updated_at, updated_by'
 
 function assert<T>(data: T | null, error: { message: string } | null): T {
   if (error) throw new Error(error.message)
@@ -231,6 +232,25 @@ export async function finalizarTarefa(id: string, senha?: string) {
   }
 
   return data as { finalizada_em: string; finalizada_por: string }
+}
+
+/** Reabre a tarefa finalizada, devolvendo-a à primeira etapa do cenário. */
+export async function reabrirTarefa(id: string, senha?: string) {
+  const { data, error } = await supabase.functions.invoke('reabrir-tarefa', {
+    body: { id, senha },
+  })
+
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      const corpo = (await error.context.json().catch(() => null)) as
+        | { error?: string; senhaObrigatoria?: boolean }
+        | null
+      throw new FinalizarError(corpo?.error ?? error.message, Boolean(corpo?.senhaObrigatoria))
+    }
+    throw new FinalizarError(error.message, false)
+  }
+
+  return data as { reaberta: boolean; coluna: string }
 }
 
 export class FinalizarError extends Error {

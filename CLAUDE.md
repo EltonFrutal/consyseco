@@ -65,6 +65,7 @@ supabase/
     wa-instance-create|qr|status|delete/  # integração uazapi (uma função por operação)
     wa-send-test/ # envio de mensagem de teste pela instância do usuário
     finalizar-tarefa/ # finaliza a tarefa validando a senha do responsável
+    reabrir-tarefa/   # devolve a tarefa finalizada para a primeira etapa
 docs/padroes.md   # padrões de UI e de auditoria
 ```
 
@@ -213,6 +214,8 @@ Formato:
 - **Kanban modelado em três níveis:** `cenarios` (quadro) → `colunas` (etapas, cor guardada como token e não como classe Tailwind) → `tarefas`. Cenário novo já nasce com A fazer / Em andamento / Concluído por trigger; excluir cenário cascateia colunas e tarefas.
 - **Tarefas são compartilhadas entre admins ativos** — policies amarradas em `public.is_active_admin()`, não em `owner_id`, porque o quadro é do time. Diferente de `whatsapp_instances`, que é por dono.
 - **Concluir ≠ finalizar.** `data_conclusao` é preenchida/zerada por trigger quando a tarefa entra ou sai da coluna marcada com `is_conclusao`; `finalizada_em` só é gravada pela edge function `finalizar-tarefa`, que exige ser o responsável ou a senha dele. Tarefa finalizada some do quadro.
+- **Reabrir tem a mesma regra de finalizar**: só o responsável, e quem não é precisa da senha dele (`reabrir-tarefa`). A tarefa volta para a primeira coluna do cenário e o trigger zera a data de conclusão.
+- **`tarefas.numero`** é um sequencial legível (o uuid não serve para conversar); é exibido como `#12` na edição e na lista de finalizadas, com o uuid no `title`.
 - **A coluna de conclusão é marcada com `colunas.is_conclusao`**, não pelo nome — cada cenário pode chamar a etapa final do que quiser.
 - **Ícone da coluna guardado como token** (`lista`, `play`, `relogio`, `check`...), traduzido em `ColunaIcone`; mesmo motivo da cor: classe/SVG montado por string some no purge.
 - **Colunas sensíveis de `tarefas` fora do alcance do cliente**: `finalizada_em`, `finalizada_por` e `data_conclusao` não têm grant de escrita para `authenticated` — só a edge function e os triggers escrevem.

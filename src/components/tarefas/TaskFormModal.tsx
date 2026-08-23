@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { FinalizarError, finalizarTarefa, type Coluna, type Prioridade, type Tarefa, type TarefaInput } from '../../api/tarefas'
 import { CancelButton, DeleteButton, SaveButton } from '../ui/ActionButtons'
-import { FinalizarSenhaDialog } from './FinalizarSenhaDialog'
+import { SenhaResponsavelDialog } from './SenhaResponsavelDialog'
 import type { Profile } from '../../types/profile'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -158,9 +158,19 @@ export function TaskFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       {/* largura maior + duas colunas: cabe inteiro na tela, sem rolagem */}
       <div className="max-h-[95vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-          {editando ? 'Editar tarefa' : 'Nova tarefa'}
-        </h3>
+        <div className="flex items-baseline gap-2">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            {editando ? 'Editar tarefa' : 'Nova tarefa'}
+          </h3>
+          {tarefa && (
+            <span
+              className="font-mono text-sm text-slate-400 dark:text-slate-500"
+              title={`Identificador interno: ${tarefa.id}`}
+            >
+              #{tarefa.numero}
+            </span>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} noValidate className="mt-3 space-y-3">
           <div className="grid gap-4 md:grid-cols-2">
@@ -445,10 +455,12 @@ export function TaskFormModal({
         </form>
       </div>
 
-      <FinalizarSenhaDialog
+      <SenhaResponsavelDialog
         open={pedindoSenha}
+        titulo="Finalizar tarefa"
+        acao="finalizar"
         nomeResponsavel={nomeResponsavel ?? 'o responsável'}
-        finalizando={finalizando}
+        processando={finalizando}
         erro={erroFinalizar}
         onConfirmar={(senhaDigitada) => handleFinalizar(senhaDigitada)}
         onCancelar={() => {

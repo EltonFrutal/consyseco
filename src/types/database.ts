@@ -173,6 +173,7 @@ export type Database = {
           finalizada_em: string | null
           finalizada_por: string | null
           id: string
+          numero: number
           ordem: number
           prazo: string | null
           prioridade: string
@@ -192,6 +193,7 @@ export type Database = {
           finalizada_em?: string | null
           finalizada_por?: string | null
           id?: string
+          numero?: number
           ordem?: number
           prazo?: string | null
           prioridade?: string
@@ -211,6 +213,7 @@ export type Database = {
           finalizada_em?: string | null
           finalizada_por?: string | null
           id?: string
+          numero?: number
           ordem?: number
           prazo?: string | null
           prioridade?: string

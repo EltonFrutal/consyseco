@@ -1,26 +1,30 @@
 import { useState, type FormEvent } from 'react'
 
-interface FinalizarSenhaDialogProps {
+interface SenhaResponsavelDialogProps {
   open: boolean
+  titulo: string
+  acao: string
   nomeResponsavel: string
-  finalizando: boolean
+  processando: boolean
   erro: string | null
   onConfirmar: (senha: string) => void
   onCancelar: () => void
 }
 
 /**
- * Pedido de senha do responsável, em modal próprio.
+ * Pedido de senha do responsável, em modal próprio — usado por finalizar e reabrir.
  * A senha vive só neste componente e é descartada ao fechar.
  */
-export function FinalizarSenhaDialog({
+export function SenhaResponsavelDialog({
   open,
+  titulo,
+  acao,
   nomeResponsavel,
-  finalizando,
+  processando,
   erro,
   onConfirmar,
   onCancelar,
-}: FinalizarSenhaDialogProps) {
+}: SenhaResponsavelDialogProps) {
   const [senha, setSenha] = useState('')
 
   if (!open) return null
@@ -33,10 +37,11 @@ export function FinalizarSenhaDialog({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Finalizar tarefa</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{titulo}</h3>
         <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
           Só <span className="font-medium text-slate-700 dark:text-slate-200">{nomeResponsavel}</span> pode
-          finalizar esta tarefa. Informe a senha para confirmar.
+          {' '}
+          {acao} esta tarefa. Informe a senha para confirmar.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-4">
@@ -78,14 +83,14 @@ export function FinalizarSenhaDialog({
             </button>
             <button
               type="submit"
-              disabled={finalizando || !senha}
+              disabled={processando || !senha}
               className="flex h-11 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800"
             >
               <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M9 11l2.5 2.5L16 8.5" />
                 <path d="M20.5 12a8.5 8.5 0 1 1-3.2-6.6" />
               </svg>
-              {finalizando ? 'Finalizando...' : 'Confirmar'}
+              {processando ? 'Confirmando...' : 'Confirmar'}
             </button>
           </div>
         </form>
