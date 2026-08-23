@@ -11,6 +11,7 @@ Padrões de UI e de banco detalhados vivem em [`docs/padroes.md`](docs/padroes.m
 - **Para quem:** uso interno; o acesso é fechado e todo usuário é criado por um administrador.
 - **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi** e o **kanban de tarefas** (cenários → colunas → tarefas). O dashboard ainda é um esqueleto.
 - **Modelo de acesso:** só existe o papel `admin` (`profiles.role` tem check `role in ('admin')`). Usuário desativado é banido no Auth **e** marcado como `disabled` no perfil.
+- **Navegação:** depois do login o usuário cai em `/inicio`, uma tela de seleção de aplicativo (Tarefas, Painel Gerencial e Pesquisa — esta última ainda não existe).
 - **Idioma:** toda a interface e as mensagens de erro são em **português do Brasil**.
 
 ## 2. Stack e versões
@@ -55,7 +56,7 @@ src/
   contexts/       # AuthContext (sessão + profile do usuário logado)
   hooks/          # useHasAdminUser
   lib/            # supabaseClient, authErrors (tradução de mensagens do Auth)
-  pages/          # LoginPage, DashboardPage, UsersPage, TarefasPage, FinalizadasPage, WhatsAppPage
+  pages/          # LoginPage, InicioPage, DashboardPage, UsersPage, TarefasPage, FinalizadasPage, WhatsAppPage
   routes/         # ProtectedRoute
   types/          # profile.ts (à mão) e database.ts (gerado pelo Supabase)
 supabase/

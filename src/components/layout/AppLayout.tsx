@@ -23,8 +23,19 @@ const iconProps = {
 
 const navItems: NavItem[] = [
   {
+    to: '/inicio',
+    label: 'Início',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M3 10.5 12 3l9 7.5" />
+        <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+        <path d="M10 21v-6h4v6" />
+      </svg>
+    ),
+  },
+  {
     to: '/dashboard',
-    label: 'Dashboard',
+    label: 'Painel Gerencial',
     icon: (
       <svg {...iconProps}>
         <rect x="3" y="3" width="7" height="9" rx="1.5" />
@@ -47,7 +58,7 @@ const navItems: NavItem[] = [
   },
   {
     to: '/tarefas?config=1',
-    label: 'Cenários',
+    label: 'Configuração',
     icon: (
       <svg {...iconProps}>
         <circle cx="12" cy="12" r="3" />

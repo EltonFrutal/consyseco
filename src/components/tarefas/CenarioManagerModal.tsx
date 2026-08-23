@@ -85,7 +85,7 @@ export function CenarioManagerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       {/* duas colunas e listas com altura fixa: cabe na tela sem rolagem */}
       <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Cenários e colunas</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Configuração</h3>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Cada cenário é um quadro com suas próprias colunas. Excluir um cenário apaga as tarefas dele.
         </p>

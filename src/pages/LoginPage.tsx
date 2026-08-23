@@ -9,7 +9,7 @@ export function LoginPage() {
   const hasAdmin = useHasAdminUser()
 
   if (!authLoading && user) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/inicio" replace />
   }
 
   return (
