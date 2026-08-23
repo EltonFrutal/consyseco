@@ -54,6 +54,7 @@ export function TaskFormModal({
   const [salvando, setSalvando] = useState(false)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
+  const [pedindoSenha, setPedindoSenha] = useState(false)
   const [senha, setSenha] = useState('')
   const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
 
@@ -103,6 +104,16 @@ export function TaskFormModal({
     } finally {
       setSalvando(false)
     }
+  }
+
+  function handleClickFinalizar() {
+    setErroFinalizar(null)
+    if (souOResponsavel) {
+      handleFinalizar()
+      return
+    }
+    // pede a senha só agora, depois do clique
+    setPedindoSenha(true)
   }
 
   async function handleFinalizar() {
@@ -380,41 +391,68 @@ export function TaskFormModal({
               <span />
             )}
 
-            {podeFinalizar && (
+            {podeFinalizar && !pedindoSenha && (
+              <button
+                type="button"
+                onClick={handleClickFinalizar}
+                disabled={finalizando}
+                className="flex h-11 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800"
+                title={
+                  souOResponsavel
+                    ? 'Finalizar — a tarefa sai do quadro'
+                    : `Pede a senha de ${nomeResponsavel ?? 'o responsável'}`
+                }
+              >
+                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M9 11l2.5 2.5L16 8.5" />
+                  <path d="M20.5 12a8.5 8.5 0 1 1-3.2-6.6" />
+                </svg>
+                {finalizando ? 'Finalizando...' : 'Finalizar'}
+              </button>
+            )}
+
+            {podeFinalizar && pedindoSenha && (
               <div className="flex flex-1 flex-wrap items-center gap-2">
-                <span className="text-xs text-emerald-700 dark:text-emerald-400">
-                  {souOResponsavel
-                    ? 'Você é o responsável e pode finalizar.'
-                    : `Senha de ${nomeResponsavel ?? 'o responsável'}:`}
-                </span>
-
-                {!souOResponsavel && (
-                  <>
-                    <label className="sr-only" htmlFor="tarefa-senha-responsavel">
-                      Senha do responsável
-                    </label>
-                    <input
-                      id="tarefa-senha-responsavel"
-                      type="password"
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
-                      autoComplete="off"
-                      className="h-11 w-40 rounded-lg border border-emerald-300 px-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
-                    />
-                  </>
-                )}
-
+                <label className="text-xs text-emerald-700 dark:text-emerald-400" htmlFor="tarefa-senha-responsavel">
+                  Senha de {nomeResponsavel ?? 'responsável'}:
+                </label>
+                <input
+                  id="tarefa-senha-responsavel"
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      if (senha) handleFinalizar()
+                    }
+                  }}
+                  autoComplete="off"
+                  autoFocus
+                  className="h-11 w-40 rounded-lg border border-emerald-300 px-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
+                />
                 <button
                   type="button"
                   onClick={handleFinalizar}
-                  disabled={finalizando || (!souOResponsavel && !senha)}
+                  disabled={finalizando || !senha}
                   className="flex h-11 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800"
                 >
-                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M9 11l2.5 2.5L16 8.5" />
-                    <path d="M20.5 12a8.5 8.5 0 1 1-3.2-6.6" />
+                  {finalizando ? 'Finalizando...' : 'Confirmar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPedindoSenha(false)
+                    setSenha('')
+                    setErroFinalizar(null)
+                  }}
+                  className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                  aria-label="Desistir de finalizar"
+                  title="Desistir de finalizar"
+                >
+                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                    <path d="M6 6l12 12M18 6L6 18" />
                   </svg>
-                  {finalizando ? 'Finalizando...' : 'Finalizar'}
                 </button>
               </div>
             )}
