@@ -174,10 +174,18 @@ export async function excluirTarefa(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
-/** Move a tarefa para o fim de outra coluna. */
-export async function moverTarefa(id: string, colunaId: string, ordem: number): Promise<void> {
-  const { error } = await supabase.from('tarefas').update({ coluna_id: colunaId, ordem }).eq('id', id)
-  if (error) throw new Error(error.message)
+/**
+ * Move a tarefa para o fim de outra coluna e devolve a linha atualizada —
+ * a data de conclusão é escrita por trigger, então precisa vir do banco.
+ */
+export async function moverTarefa(id: string, colunaId: string, ordem: number): Promise<Tarefa> {
+  const { data, error } = await supabase
+    .from('tarefas')
+    .update({ coluna_id: colunaId, ordem })
+    .eq('id', id)
+    .select(TAREFA_COLUNAS)
+    .single()
+  return assert(data as Tarefa | null, error)
 }
 
 /** Cores permitidas nas colunas — classes escritas por extenso por causa do purge do Tailwind. */

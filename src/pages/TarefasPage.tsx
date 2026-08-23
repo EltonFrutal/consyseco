@@ -135,7 +135,9 @@ export function TarefasPage() {
       prev.map((t) => (t.id === tarefa.id ? { ...t, coluna_id: colunaDestino, ordem } : t)),
     )
     try {
-      await moverTarefa(tarefa.id, colunaDestino, ordem)
+      // o trigger grava (ou zera) a data de conclusão: usar a linha que voltou
+      const atualizada = await moverTarefa(tarefa.id, colunaDestino, ordem)
+      setTarefas((prev) => prev.map((t) => (t.id === atualizada.id ? atualizada : t)))
     } catch (err) {
       setTarefas(anterior)
       setErro(err instanceof Error ? err.message : 'Não foi possível mover a tarefa.')
