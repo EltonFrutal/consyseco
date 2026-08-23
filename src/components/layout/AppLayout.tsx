@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { ThemeToggle } from './ThemeToggle'
 import { SidebarFooter } from './SidebarFooter'
@@ -21,30 +21,21 @@ const iconProps = {
   viewBox: '0 0 24 24',
 }
 
-const navItems: NavItem[] = [
-  {
-    to: '/inicio',
-    label: 'Início',
-    icon: (
-      <svg {...iconProps}>
-        <path d="M3 10.5 12 3l9 7.5" />
-        <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
-        <path d="M10 21v-6h4v6" />
-      </svg>
-    ),
-  },
-  {
-    to: '/dashboard',
-    label: 'Painel Gerencial',
-    icon: (
-      <svg {...iconProps}>
-        <rect x="3" y="3" width="7" height="9" rx="1.5" />
-        <rect x="14" y="3" width="7" height="5" rx="1.5" />
-        <rect x="14" y="12" width="7" height="9" rx="1.5" />
-        <rect x="3" y="16" width="7" height="5" rx="1.5" />
-      </svg>
-    ),
-  },
+const itemInicio: NavItem = 
+{
+  to: '/inicio',
+  label: 'Início',
+  icon: (
+    <svg {...iconProps}>
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+      <path d="M10 21v-6h4v6" />
+    </svg>
+  ),
+}
+
+/** Itens do aplicativo Tarefas. O Painel Gerencial não entra: é outro app. */
+const itensTarefas: NavItem[] = [
   {
     to: '/tarefas',
     label: 'Tarefas',
@@ -102,8 +93,22 @@ const navItems: NavItem[] = [
 
 const STORAGE_KEY = 'sidebar-collapsed'
 
+/**
+ * O menu depende do aplicativo aberto: na tela de início não há itens, e
+ * dentro de um app o primeiro item é sempre o caminho de volta.
+ */
+function menuDaRota(pathname: string): NavItem[] {
+  if (pathname.startsWith('/inicio')) return []
+  // usuários e integração pertencem ao app Tarefas, apesar da rota própria
+  const doApp = ['/tarefas', '/usuarios', '/integracoes']
+  if (doApp.some((rota) => pathname.startsWith(rota))) return [itemInicio, ...itensTarefas]
+  return [itemInicio]
+}
+
 export function AppLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
+  const { pathname } = useLocation()
+  const navItems = menuDaRota(pathname)
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')
 
   useEffect(() => {
