@@ -5,6 +5,7 @@ import { TaskFormModal } from '../components/tarefas/TaskFormModal'
 import { CenarioManagerModal } from '../components/tarefas/CenarioManagerModal'
 import { AddButton } from '../components/ui/AddButton'
 import { ColunaIcone } from '../components/tarefas/ColunaIcone'
+import { FiltroPessoas, type DimensaoFiltro } from '../components/tarefas/FiltroPessoas'
 import { supabase } from '../lib/supabaseClient'
 import {
   CORES_COLUNA,
@@ -36,8 +37,8 @@ export function TarefasPage() {
   const [gerenciando, setGerenciando] = useState(false)
   const [arrastada, setArrastada] = useState<Tarefa | null>(null)
   const [colunaAlvo, setColunaAlvo] = useState<string | null>(null)
-  const [filtroResponsavel, setFiltroResponsavel] = useState<string | null>(null)
-  const [filtroExecutor, setFiltroExecutor] = useState<string | null>(null)
+  const [dimensaoFiltro, setDimensaoFiltro] = useState<DimensaoFiltro>('responsavel')
+  const [filtroPessoa, setFiltroPessoa] = useState<string | null>(null)
 
   const mapaPessoas = useMemo(() => new Map(pessoas.map((p) => [p.id, p])), [pessoas])
 
@@ -52,15 +53,14 @@ export function TarefasPage() {
     return pessoas.filter((pessoa) => ids.has(pessoa.id))
   }, [tarefas, pessoas])
 
-  const tarefasVisiveis = useMemo(
-    () =>
-      tarefas.filter(
-        (t) =>
-          (!filtroResponsavel || t.responsavel_id === filtroResponsavel) &&
-          (!filtroExecutor || t.executor_id === filtroExecutor),
-      ),
-    [tarefas, filtroResponsavel, filtroExecutor],
-  )
+  const pessoasDoFiltro = dimensaoFiltro === 'responsavel' ? responsaveis : executores
+
+  const tarefasVisiveis = useMemo(() => {
+    if (!filtroPessoa) return tarefas
+    return tarefas.filter((t) =>
+      dimensaoFiltro === 'responsavel' ? t.responsavel_id === filtroPessoa : t.executor_id === filtroPessoa,
+    )
+  }, [tarefas, filtroPessoa, dimensaoFiltro])
 
   const carregarBase = useCallback(async (selecionar?: string) => {
     setCarregando(true)
@@ -156,101 +156,13 @@ export function TarefasPage() {
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
-            {responsaveis.length > 0 && (
-              <div>
-                <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">Responsável</span>
-                <div className="mt-1 flex items-center gap-1.5" role="group" aria-label="Filtrar por responsável">
-                  {responsaveis.map((pessoa) => {
-                    const ativo = filtroResponsavel === pessoa.id
-                    return (
-                      <button
-                        key={pessoa.id}
-                        type="button"
-                        onClick={() => setFiltroResponsavel(ativo ? null : pessoa.id)}
-                        aria-pressed={ativo}
-                        aria-label={`Mostrar apenas tarefas de ${pessoa.name}`}
-                        title={ativo ? `Mostrando ${pessoa.name} — clique para limpar` : pessoa.name}
-                        className={`h-9 w-9 overflow-hidden rounded-full transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
-                          ativo
-                            ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-800'
-                            : 'opacity-60 hover:opacity-100'
-                        }`}
-                      >
-                        {pessoa.avatar_url ? (
-                          <img src={pessoa.avatar_url} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="flex h-full w-full items-center justify-center bg-slate-100 text-xs font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                            {pessoa.name.trim().charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-
-                  {filtroResponsavel && (
-                    <button
-                      type="button"
-                      onClick={() => setFiltroResponsavel(null)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
-                      aria-label="Mostrar todos os responsáveis"
-                      title="Mostrar todos"
-                    >
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-                        <path d="M6 6l12 12M18 6L6 18" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {executores.length > 0 && (
-              <div>
-                <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">Executor</span>
-                <div className="mt-1 flex items-center gap-1.5" role="group" aria-label="Filtrar por executor">
-                  {executores.map((pessoa) => {
-                    const ativo = filtroExecutor === pessoa.id
-                    return (
-                      <button
-                        key={pessoa.id}
-                        type="button"
-                        onClick={() => setFiltroExecutor(ativo ? null : pessoa.id)}
-                        aria-pressed={ativo}
-                        aria-label={`Mostrar apenas tarefas executadas por ${pessoa.name}`}
-                        title={ativo ? `Mostrando ${pessoa.name} — clique para limpar` : pessoa.name}
-                        className={`h-9 w-9 overflow-hidden rounded-full transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
-                          ativo
-                            ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-800'
-                            : 'opacity-60 hover:opacity-100'
-                        }`}
-                      >
-                        {pessoa.avatar_url ? (
-                          <img src={pessoa.avatar_url} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="flex h-full w-full items-center justify-center bg-slate-100 text-xs font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
-                            {pessoa.name.trim().charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-
-                  {filtroExecutor && (
-                    <button
-                      type="button"
-                      onClick={() => setFiltroExecutor(null)}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
-                      aria-label="Mostrar todos os executores"
-                      title="Mostrar todos"
-                    >
-                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-                        <path d="M6 6l12 12M18 6L6 18" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+            <FiltroPessoas
+              dimensao={dimensaoFiltro}
+              onDimensao={setDimensaoFiltro}
+              pessoas={pessoasDoFiltro}
+              selecionado={filtroPessoa}
+              onSelecionar={setFiltroPessoa}
+            />
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="cenario">
@@ -260,8 +172,7 @@ export function TarefasPage() {
                 id="cenario"
                 value={cenarioId}
                 onChange={(e) => {
-                  setFiltroResponsavel(null)
-                  setFiltroExecutor(null)
+                  setFiltroPessoa(null)
                   setCenarioId(e.target.value)
                 }}
                 disabled={cenarios.length === 0}
