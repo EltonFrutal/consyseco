@@ -16,6 +16,8 @@ import {
   listarCenarios,
   listarColunas,
   listarTarefas,
+  listarTarefasDeTodos,
+  listarTodasColunas,
   moverTarefa,
   type Cenario,
   type Coluna,
@@ -24,11 +26,14 @@ import {
 } from '../api/tarefas'
 import type { Profile } from '../types/profile'
 
+const TODOS = 'todos'
+
 export function TarefasPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [cenarios, setCenarios] = useState<Cenario[]>([])
   const [cenarioId, setCenarioId] = useState('')
   const [colunas, setColunas] = useState<Coluna[]>([])
+  const [todasColunas, setTodasColunas] = useState<Coluna[]>([])
   const [tarefas, setTarefas] = useState<Tarefa[]>([])
   const [pessoas, setPessoas] = useState<Profile[]>([])
 
@@ -68,11 +73,13 @@ export function TarefasPage() {
     setCarregando(true)
     setErro(null)
     try {
-      const [lista, { data: perfis }] = await Promise.all([
+      const [lista, cols, { data: perfis }] = await Promise.all([
         listarCenarios(),
+        listarTodasColunas(),
         supabase.from('profiles').select('*').eq('status', 'active').order('name'),
       ])
       setCenarios(lista)
+      setTodasColunas(cols)
       setPessoas((perfis as Profile[]) ?? [])
       const escolhido = selecionar ?? (lista.some((c) => c.id === cenarioId) ? cenarioId : lista[0]?.id ?? '')
       setCenarioId(escolhido)
@@ -87,17 +94,35 @@ export function TarefasPage() {
     }
   }, [cenarioId])
 
-  const carregarQuadro = useCallback(async (id: string) => {
-    if (!id) return
-    setErro(null)
-    try {
-      const [cols, tks] = await Promise.all([listarColunas(id), listarTarefas(id)])
-      setColunas(cols)
-      setTarefas(tks)
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não foi possível carregar o quadro.')
-    }
-  }, [])
+  const carregarQuadro = useCallback(
+    async (id: string) => {
+      if (!id) return
+      setErro(null)
+      try {
+        if (id === TODOS) {
+          const [cols, tks] = await Promise.all([listarTodasColunas(), listarTarefasDeTodos()])
+          setTodasColunas(cols)
+          // etapas de mesmo nome viram uma coluna só
+          const agrupadas = new Map<string, Coluna>()
+          cols.forEach((coluna) => {
+            const chave = coluna.nome.toLowerCase()
+            const atual = agrupadas.get(chave)
+            if (!atual || coluna.ordem < atual.ordem) agrupadas.set(chave, coluna)
+          })
+          setColunas([...agrupadas.values()].sort((a, b) => a.ordem - b.ordem))
+          setTarefas(tks)
+          return
+        }
+
+        const [cols, tks] = await Promise.all([listarColunas(id), listarTarefas(id)])
+        setColunas(cols)
+        setTarefas(tks)
+      } catch (err) {
+        setErro(err instanceof Error ? err.message : 'Não foi possível carregar o quadro.')
+      }
+    },
+    [],
+  )
 
   useEffect(() => {
     carregarBase()
@@ -119,6 +144,11 @@ export function TarefasPage() {
 
   const cenarioAtual = cenarios.find((c) => c.id === cenarioId) ?? null
 
+  /** Nome (minúsculo) da coluna de uma tarefa — usado no modo "Todos". */
+  function nomeDaColuna(colunaId: string): string {
+    return (todasColunas.find((c) => c.id === colunaId)?.nome ?? '').toLowerCase()
+  }
+
   async function handleSalvarTarefa(input: TarefaInput, senha?: string) {
     if (modalTarefa) {
       await atualizarTarefa(modalTarefa.id, input, senha)
@@ -136,7 +166,21 @@ export function TarefasPage() {
     await carregarQuadro(cenarioId)
   }
 
-  async function handleMover(tarefa: Tarefa, colunaDestino: string) {
+  async function handleMover(tarefa: Tarefa, colunaAlvoId: string) {
+    // no modo "Todos" a coluna clicada é de outro cenário: usar a de mesmo nome
+    let colunaDestino = colunaAlvoId
+    if (cenarioId === TODOS) {
+      const nomeAlvo = (todasColunas.find((c) => c.id === colunaAlvoId)?.nome ?? '').toLowerCase()
+      const equivalente = todasColunas.find(
+        (c) => c.cenario_id === tarefa.cenario_id && c.nome.toLowerCase() === nomeAlvo,
+      )
+      if (!equivalente) {
+        setErro('O cenário desta tarefa não tem uma etapa equivalente.')
+        return
+      }
+      colunaDestino = equivalente.id
+    }
+
     if (tarefa.coluna_id === colunaDestino) return
     const ordem = tarefas.filter((t) => t.coluna_id === colunaDestino).length
     // atualiza a tela antes da resposta do servidor e desfaz se falhar
@@ -189,6 +233,7 @@ export function TarefasPage() {
                 className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
               >
                 {cenarios.length === 0 && <option value="">Nenhum cenário</option>}
+                {cenarios.length > 0 && <option value={TODOS}>Todos os cenários</option>}
                 {cenarios.map((cenario) => (
                   <option key={cenario.id} value={cenario.id}>
                     {cenario.nome}
@@ -202,7 +247,7 @@ export function TarefasPage() {
 <AddButton
               onClick={() => setModalTarefa(null)}
               label="Nova tarefa"
-              disabled={!cenarioAtual || colunas.length === 0}
+              disabled={cenarios.length === 0 || todasColunas.length === 0}
             />
           </div>
         </header>
@@ -241,7 +286,11 @@ export function TarefasPage() {
         {!carregando && colunas.length > 0 && (
           <div className="grid min-h-0 flex-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
             {colunas.map((coluna) => {
-              const daColuna = tarefasVisiveis.filter((t) => t.coluna_id === coluna.id)
+              const daColuna = tarefasVisiveis.filter((t) =>
+                cenarioId === TODOS
+                  ? nomeDaColuna(t.coluna_id) === coluna.nome.toLowerCase()
+                  : t.coluna_id === coluna.id,
+              )
               const cor = CORES_COLUNA[coluna.cor] ?? CORES_COLUNA.slate
               return (
                 <section
@@ -305,12 +354,13 @@ export function TarefasPage() {
         )}
       </div>
 
-      {modalTarefa !== undefined && cenarioAtual && (
+      {modalTarefa !== undefined && cenarios.length > 0 && (
         <TaskFormModal
           key={modalTarefa?.id ?? 'nova'}
           open
-          cenarioId={cenarioAtual.id}
-          colunas={colunas}
+          cenarioId={cenarioAtual?.id ?? cenarios[0]?.id ?? ''}
+          cenarios={cenarios}
+          colunas={todasColunas}
           pessoas={pessoas}
           tarefa={modalTarefa}
           onClose={() => setModalTarefa(undefined)}

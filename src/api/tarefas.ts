@@ -153,6 +153,17 @@ export async function listarTodasTarefas(): Promise<Tarefa[]> {
   return assert(data as Tarefa[] | null, error) ?? []
 }
 
+/** Tarefas em aberto de todos os cenários — usado pelo filtro "Todos". */
+export async function listarTarefasDeTodos(): Promise<Tarefa[]> {
+  const { data, error } = await supabase
+    .from('tarefas')
+    .select(TAREFA_COLUNAS)
+    .is('finalizada_em', null)
+    .order('ordem', { ascending: true })
+    .order('created_at', { ascending: true })
+  return assert(data as Tarefa[] | null, error) ?? []
+}
+
 export async function criarTarefa(input: TarefaInput & { ordem?: number }): Promise<Tarefa> {
   const { data, error } = await supabase
     .from('tarefas')
@@ -308,6 +319,7 @@ export class FinalizarError extends Error {
 
 export interface FiltroFinalizadas {
   texto: string
+  cenarioId: string
   campoData: 'conclusao' | 'finalizacao'
   de: string
   ate: string
@@ -318,6 +330,7 @@ export async function listarFinalizadas(filtro: FiltroFinalizadas): Promise<Tare
   const coluna = filtro.campoData === 'conclusao' ? 'data_conclusao' : 'finalizada_em'
   let query = supabase.from('tarefas').select(TAREFA_COLUNAS).not('finalizada_em', 'is', null)
 
+  if (filtro.cenarioId && filtro.cenarioId !== 'todos') query = query.eq('cenario_id', filtro.cenarioId)
   if (filtro.de) query = query.gte(coluna, `${filtro.de}T00:00:00`)
   if (filtro.ate) query = query.lte(coluna, `${filtro.ate}T23:59:59`)
 

@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppLayout } from '../components/layout/AppLayout'
 import { supabase } from '../lib/supabaseClient'
-import { FinalizarError, PRIORIDADES, listarFinalizadas, reabrirTarefa, type Tarefa } from '../api/tarefas'
+import {
+  FinalizarError,
+  PRIORIDADES,
+  listarCenarios,
+  listarFinalizadas,
+  reabrirTarefa,
+  type Cenario,
+  type Tarefa,
+} from '../api/tarefas'
 import { SenhaResponsavelDialog } from '../components/tarefas/SenhaResponsavelDialog'
 import { useAuth } from '../contexts/AuthContext'
 import type { Profile } from '../types/profile'
@@ -23,6 +31,8 @@ export function FinalizadasPage() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
+  const [cenarios, setCenarios] = useState<Cenario[]>([])
+  const [cenarioId, setCenarioId] = useState('todos')
   const [texto, setTexto] = useState('')
   const [campoData, setCampoData] = useState<CampoData>('finalizacao')
   const [de, setDe] = useState('')
@@ -35,22 +45,24 @@ export function FinalizadasPage() {
     setCarregando(true)
     setErro(null)
     try {
-      const [lista, { data: perfis }] = await Promise.all([
-        listarFinalizadas({ texto, campoData, de, ate }),
+      const [lista, listaCenarios, { data: perfis }] = await Promise.all([
+        listarFinalizadas({ texto, cenarioId, campoData, de, ate }),
+        listarCenarios(),
         supabase.from('profiles').select('*').order('name'),
       ])
       setTarefas(lista)
+      setCenarios(listaCenarios)
       setPessoas((perfis as Profile[]) ?? [])
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não foi possível carregar as tarefas finalizadas.')
     } finally {
       setCarregando(false)
     }
-  }, [campoData, de, ate, texto])
+  }, [campoData, de, ate, texto, cenarioId])
 
   useEffect(() => {
     carregar()
-  }, [campoData, de, ate])
+  }, [campoData, de, ate, cenarioId])
 
   async function executarReabertura(tarefa: Tarefa, senha?: string) {
     setProcessando(true)
@@ -114,7 +126,26 @@ export function FinalizadasPage() {
           </p>
         </header>
 
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          <div>
+            <label className={labelClass} htmlFor="filtro-cenario">
+              Cenário
+            </label>
+            <select
+              id="filtro-cenario"
+              value={cenarioId}
+              onChange={(e) => setCenarioId(e.target.value)}
+              className={inputClass}
+            >
+              <option value="todos">Todos</option>
+              {cenarios.map((cenario) => (
+                <option key={cenario.id} value={cenario.id}>
+                  {cenario.nome}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="sm:col-span-2 xl:col-span-1">
             <label className={labelClass} htmlFor="filtro-texto">
               Pessoa ou tarefa

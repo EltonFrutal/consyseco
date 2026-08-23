@@ -3,6 +3,7 @@ import {
   CAMPOS_RESTRITOS,
   FinalizarError,
   finalizarTarefa,
+  type Cenario,
   type Coluna,
   type Prioridade,
   type Tarefa,
@@ -16,6 +17,8 @@ import { useAuth } from '../../contexts/AuthContext'
 interface TaskFormModalProps {
   open: boolean
   cenarioId: string
+  cenarios: Cenario[]
+  /** Todas as colunas: o select de etapa filtra pelas do cenário escolhido. */
   colunas: Coluna[]
   pessoas: Profile[]
   tarefa: Tarefa | null
@@ -41,6 +44,7 @@ const PRIORIDADES_FORM = [
 export function TaskFormModal({
   open,
   cenarioId,
+  cenarios,
   colunas,
   pessoas,
   tarefa,
@@ -52,7 +56,9 @@ export function TaskFormModal({
   const { user } = useAuth()
   const [titulo, setTitulo] = useState(tarefa?.titulo ?? '')
   const [descricao, setDescricao] = useState(tarefa?.descricao ?? '')
-  const [colunaId, setColunaId] = useState(tarefa?.coluna_id ?? colunas[0]?.id ?? '')
+  const [cenarioSelecionado, setCenarioSelecionado] = useState(tarefa?.cenario_id ?? cenarioId)
+  const colunasDoCenario = colunas.filter((c) => c.cenario_id === cenarioSelecionado)
+  const [colunaId, setColunaId] = useState(tarefa?.coluna_id ?? colunasDoCenario[0]?.id ?? '')
   const [solicitanteId, setSolicitanteId] = useState(tarefa?.solicitante_id ?? '')
   const [responsavelId, setResponsavelId] = useState(tarefa?.responsavel_id ?? '')
   const [executorId, setExecutorId] = useState(tarefa?.executor_id ?? '')
@@ -89,6 +95,7 @@ export function TaskFormModal({
     if (!responsavelId) faltando.responsavel = 'Escolha o responsável.'
     if (!executorId) faltando.executor = 'Escolha o executor.'
     if (!prazo) faltando.prazo = 'Informe o prazo.'
+    if (!cenarioSelecionado) faltando.cenario = 'Escolha o cenário.'
     if (!colunaId) faltando.coluna = 'Escolha a etapa.'
 
     setCampos(faltando)
@@ -102,7 +109,7 @@ export function TaskFormModal({
 
   function montarInput(): TarefaInput {
     return {
-      cenario_id: cenarioId,
+      cenario_id: cenarioSelecionado,
       coluna_id: colunaId,
       titulo: titulo.trim(),
       descricao: descricao.trim() || null,
@@ -344,8 +351,34 @@ export function TaskFormModal({
             </div>
           </div>
 
-          {/* prazo, etapa e prioridade dividem uma linha só, abaixo da descrição */}
+          {/* cenário, prazo, etapa e prioridade dividem as linhas de baixo */}
           <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <label className={labelClass} htmlFor="tarefa-cenario">
+                Cenário
+              </label>
+              <select
+                id="tarefa-cenario"
+                value={cenarioSelecionado}
+                onChange={(e) => {
+                  const novo = e.target.value
+                  setCenarioSelecionado(novo)
+                  // a etapa pertence ao cenário: volta para a primeira dele
+                  const primeira = colunas.find((c) => c.cenario_id === novo)
+                  setColunaId(primeira?.id ?? '')
+                }}
+                className={campos.cenario ? inputErroClass : inputClass}
+                aria-invalid={Boolean(campos.cenario)}
+              >
+                {cenarios.map((cenario) => (
+                  <option key={cenario.id} value={cenario.id}>
+                    {cenario.nome}
+                  </option>
+                ))}
+              </select>
+              {campos.cenario && <p className={erroCampoClass}>{campos.cenario}</p>}
+            </div>
+
             <div>
               <label className={labelClass} htmlFor="tarefa-prazo">
                 Prazo
@@ -379,7 +412,7 @@ export function TaskFormModal({
                 aria-invalid={Boolean(campos.coluna)}
                 aria-describedby={campos.coluna ? 'tarefa-coluna-erro' : undefined}
               >
-                {colunas.map((coluna) => (
+                {colunasDoCenario.map((coluna) => (
                   <option key={coluna.id} value={coluna.id}>
                     {coluna.nome}
                   </option>
