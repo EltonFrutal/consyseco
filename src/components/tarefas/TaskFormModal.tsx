@@ -157,10 +157,9 @@ export function TaskFormModal({
                   onChange={(e) => setTitulo(e.target.value)}
                   className={campos.titulo ? inputErroClass : inputClass}
                   aria-invalid={Boolean(campos.titulo)}
-                  aria-describedby={campos.titulo ? "tarefa-titulo-erro" : undefined}
+                  aria-describedby={campos.titulo ? 'tarefa-titulo-erro' : undefined}
                   autoFocus
                 />
-              
                 {campos.titulo && (
                   <p id="tarefa-titulo-erro" className={erroCampoClass}>
                     {campos.titulo}
@@ -174,14 +173,13 @@ export function TaskFormModal({
                 </label>
                 <textarea
                   id="tarefa-descricao"
-                  rows={7}
+                  rows={4}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   className={campos.descricao ? inputErroClass : inputClass}
                   aria-invalid={Boolean(campos.descricao)}
-                  aria-describedby={campos.descricao ? "tarefa-descricao-erro" : undefined}
+                  aria-describedby={campos.descricao ? 'tarefa-descricao-erro' : undefined}
                 />
-              
                 {campos.descricao && (
                   <p id="tarefa-descricao-erro" className={erroCampoClass}>
                     {campos.descricao}
@@ -201,16 +199,15 @@ export function TaskFormModal({
                   onChange={(e) => setSolicitanteId(e.target.value)}
                   className={campos.solicitante ? inputErroClass : inputClass}
                   aria-invalid={Boolean(campos.solicitante)}
-                  aria-describedby={campos.solicitante ? "tarefa-solicitante-erro" : undefined}
+                  aria-describedby={campos.solicitante ? 'tarefa-solicitante-erro' : undefined}
                 >
-                  <option value="">Ninguém</option>
+                  <option value="">Selecione</option>
                   {pessoas.map((pessoa) => (
                     <option key={pessoa.id} value={pessoa.id}>
                       {pessoa.name}
                     </option>
                   ))}
                 </select>
-              
                 {campos.solicitante && (
                   <p id="tarefa-solicitante-erro" className={erroCampoClass}>
                     {campos.solicitante}
@@ -228,16 +225,15 @@ export function TaskFormModal({
                   onChange={(e) => setResponsavelId(e.target.value)}
                   className={campos.responsavel ? inputErroClass : inputClass}
                   aria-invalid={Boolean(campos.responsavel)}
-                  aria-describedby={campos.responsavel ? "tarefa-responsavel-erro" : undefined}
+                  aria-describedby={campos.responsavel ? 'tarefa-responsavel-erro' : undefined}
                 >
-                  <option value="">Ninguém</option>
+                  <option value="">Selecione</option>
                   {pessoas.map((pessoa) => (
                     <option key={pessoa.id} value={pessoa.id}>
                       {pessoa.name}
                     </option>
                   ))}
                 </select>
-              
                 {campos.responsavel && (
                   <p id="tarefa-responsavel-erro" className={erroCampoClass}>
                     {campos.responsavel}
@@ -255,99 +251,98 @@ export function TaskFormModal({
                   onChange={(e) => setExecutorId(e.target.value)}
                   className={campos.executor ? inputErroClass : inputClass}
                   aria-invalid={Boolean(campos.executor)}
-                  aria-describedby={campos.executor ? "tarefa-executor-erro" : undefined}
+                  aria-describedby={campos.executor ? 'tarefa-executor-erro' : undefined}
                 >
-                  <option value="">Ninguém</option>
+                  <option value="">Selecione</option>
                   {pessoas.map((pessoa) => (
                     <option key={pessoa.id} value={pessoa.id}>
                       {pessoa.name}
                     </option>
                   ))}
                 </select>
-              
                 {campos.executor && (
                   <p id="tarefa-executor-erro" className={erroCampoClass}>
                     {campos.executor}
                   </p>
                 )}
               </div>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className={labelClass} htmlFor="tarefa-prazo">
-                    Prazo
-                  </label>
-                  <input
-                    id="tarefa-prazo"
-                    type="date"
-                    value={prazo}
-                    onChange={(e) => setPrazo(e.target.value)}
-                    className={campos.prazo ? inputErroClass : inputClass}
-                  aria-invalid={Boolean(campos.prazo)}
-                  aria-describedby={campos.prazo ? "tarefa-prazo-erro" : undefined}
-                  />
-                
-                {campos.prazo && (
-                  <p id="tarefa-prazo-erro" className={erroCampoClass}>
-                    {campos.prazo}
-                  </p>
-                )}
+          {/* prazo, etapa e prioridade dividem uma linha só, abaixo da descrição */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label className={labelClass} htmlFor="tarefa-prazo">
+                Prazo
+              </label>
+              <input
+                id="tarefa-prazo"
+                type="date"
+                value={prazo}
+                onChange={(e) => setPrazo(e.target.value)}
+                className={campos.prazo ? inputErroClass : inputClass}
+                aria-invalid={Boolean(campos.prazo)}
+                aria-describedby={campos.prazo ? 'tarefa-prazo-erro' : undefined}
+              />
+              {campos.prazo && (
+                <p id="tarefa-prazo-erro" className={erroCampoClass}>
+                  {campos.prazo}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className={labelClass} htmlFor="tarefa-coluna">
+                Etapa
+              </label>
+              <select
+                id="tarefa-coluna"
+                value={colunaId}
+                onChange={(e) => setColunaId(e.target.value)}
+                className={campos.coluna ? inputErroClass : inputClass}
+                aria-invalid={Boolean(campos.coluna)}
+                aria-describedby={campos.coluna ? 'tarefa-coluna-erro' : undefined}
+              >
+                {colunas.map((coluna) => (
+                  <option key={coluna.id} value={coluna.id}>
+                    {coluna.nome}
+                  </option>
+                ))}
+              </select>
+              {campos.coluna && (
+                <p id="tarefa-coluna-erro" className={erroCampoClass}>
+                  {campos.coluna}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-end gap-3">
+              <span className={`${labelClass} pb-2.5`} id="rotulo-prioridade">
+                Prioridade
+              </span>
+              <div className="flex gap-1.5" role="radiogroup" aria-labelledby="rotulo-prioridade">
+                {PRIORIDADES_FORM.map((item) => {
+                  const ativo = prioridade === item.valor
+                  return (
+                    <button
+                      key={item.valor}
+                      type="button"
+                      role="radio"
+                      aria-checked={ativo}
+                      onClick={() => setPrioridade(item.valor)}
+                      title={item.rotulo}
+                      className={`flex h-10 w-10 items-center justify-center rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                        ativo
+                          ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
+                          : 'border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      <span className={`h-3.5 w-3.5 rounded-full ${item.ponto}`} aria-hidden="true" />
+                      <span className="sr-only">{item.rotulo}</span>
+                    </button>
+                  )
+                })}
               </div>
-
-                <div>
-                  <label className={labelClass} htmlFor="tarefa-coluna">
-                    Etapa
-                  </label>
-                  <select
-                    id="tarefa-coluna"
-                    value={colunaId}
-                    onChange={(e) => setColunaId(e.target.value)}
-                    className={campos.coluna ? inputErroClass : inputClass}
-                  aria-invalid={Boolean(campos.coluna)}
-                  aria-describedby={campos.coluna ? "tarefa-coluna-erro" : undefined}
-                  >
-                    {colunas.map((coluna) => (
-                      <option key={coluna.id} value={coluna.id}>
-                        {coluna.nome}
-                      </option>
-                    ))}
-                  </select>
-                
-                {campos.coluna && (
-                  <p id="tarefa-coluna-erro" className={erroCampoClass}>
-                    {campos.coluna}
-                  </p>
-                )}
-              </div>
-              </div>
-
-                <div>
-                  <span className={labelClass}>Prioridade</span>
-                  <div className="mt-1 flex gap-1" role="radiogroup" aria-label="Prioridade">
-                    {PRIORIDADES_FORM.map((item) => {
-                      const ativo = prioridade === item.valor
-                      return (
-                        <button
-                          key={item.valor}
-                          type="button"
-                          role="radio"
-                          aria-checked={ativo}
-                          onClick={() => setPrioridade(item.valor)}
-                          title={item.rotulo}
-                          className={`flex h-10 flex-1 items-center justify-center rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                            ativo
-                              ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
-                              : 'border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'
-                          }`}
-                        >
-                          <span className={`h-3 w-3 rounded-full ${item.ponto}`} aria-hidden="true" />
-                          <span className="sr-only">{item.rotulo}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
             </div>
           </div>
 
