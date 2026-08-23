@@ -353,48 +353,6 @@ export function TaskFormModal({
             </p>
           )}
 
-          {podeFinalizar && (
-            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-              <span className="text-xs text-emerald-800 dark:text-emerald-300">
-                {souOResponsavel
-                  ? 'Você é o responsável e pode finalizar — a tarefa sai do quadro.'
-                  : `Só ${nomeResponsavel ?? 'o responsável'} finaliza: informe a senha dele.`}
-              </span>
-
-              {!souOResponsavel && (
-                <>
-                  <label className="sr-only" htmlFor="tarefa-senha-responsavel">
-                    Senha do responsável
-                  </label>
-                  <input
-                    id="tarefa-senha-responsavel"
-                    type="password"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    autoComplete="off"
-                    placeholder="Senha do responsável"
-                    className="w-48 rounded-lg border border-emerald-300 px-2.5 py-1.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
-                  />
-                </>
-              )}
-
-              <button
-                type="button"
-                onClick={handleFinalizar}
-                disabled={finalizando || (!souOResponsavel && !senha)}
-                className="ml-auto rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
-              >
-                {finalizando ? 'Finalizando...' : 'Finalizar'}
-              </button>
-
-              {erroFinalizar && (
-                <p role="alert" className="w-full text-xs font-medium text-red-600 dark:text-red-400">
-                  {erroFinalizar}
-                </p>
-              )}
-            </div>
-          )}
-
           {confirmandoExclusao && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
               <span className="text-xs">Excluir esta tarefa? A ação não pode ser desfeita.</span>
@@ -415,17 +373,62 @@ export function TaskFormModal({
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3 pt-4">
+          <div className="flex flex-wrap items-center gap-3 pt-4">
             {editando ? (
               <DeleteButton onClick={() => setConfirmandoExclusao(true)} label="Excluir tarefa" />
             ) : (
               <span />
             )}
 
-            <div className="flex gap-2">
+            {podeFinalizar && (
+              <div className="flex flex-1 flex-wrap items-center gap-2">
+                <span className="text-xs text-emerald-700 dark:text-emerald-400">
+                  {souOResponsavel
+                    ? 'Você é o responsável e pode finalizar.'
+                    : `Senha de ${nomeResponsavel ?? 'o responsável'}:`}
+                </span>
+
+                {!souOResponsavel && (
+                  <>
+                    <label className="sr-only" htmlFor="tarefa-senha-responsavel">
+                      Senha do responsável
+                    </label>
+                    <input
+                      id="tarefa-senha-responsavel"
+                      type="password"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      autoComplete="off"
+                      className="h-11 w-40 rounded-lg border border-emerald-300 px-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
+                    />
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleFinalizar}
+                  disabled={finalizando || (!souOResponsavel && !senha)}
+                  className="flex h-11 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800"
+                >
+                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9 11l2.5 2.5L16 8.5" />
+                    <path d="M20.5 12a8.5 8.5 0 1 1-3.2-6.6" />
+                  </svg>
+                  {finalizando ? 'Finalizando...' : 'Finalizar'}
+                </button>
+              </div>
+            )}
+
+            <div className="ml-auto flex gap-2">
               <CancelButton onClick={onClose} />
               <SaveButton disabled={salvando} label={salvando ? 'Salvando...' : 'Salvar'} />
             </div>
+
+            {erroFinalizar && (
+              <p role="alert" className="w-full text-xs font-medium text-red-600 dark:text-red-400">
+                {erroFinalizar}
+              </p>
+            )}
           </div>
 
           {tarefa && (
