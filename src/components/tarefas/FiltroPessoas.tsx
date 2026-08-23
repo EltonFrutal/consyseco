@@ -34,7 +34,7 @@ export function FiltroPessoas({
 
   return (
     <div>
-      <div className="flex rounded-lg border border-slate-300 p-0.5 dark:border-slate-600">
+      <div className="flex gap-1">
         {(['responsavel', 'executor'] as const).map((valor) => (
           <button
             key={valor}
@@ -61,7 +61,7 @@ export function FiltroPessoas({
             type="button"
             onClick={() => setInicio((v) => Math.max(0, v - 1))}
             disabled={inicio === 0}
-            className="flex h-9 w-6 items-center justify-center rounded-lg text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 dark:hover:text-slate-200"
+            className="flex h-10 w-6 items-center justify-center rounded-lg text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 dark:hover:text-slate-200"
             aria-label="Ver pessoas anteriores"
             title="Anteriores"
           >
@@ -86,10 +86,10 @@ export function FiltroPessoas({
                 aria-pressed={ativo}
                 aria-label={`Mostrar apenas tarefas de ${pessoa.name}`}
                 title={ativo ? `${pessoa.name} — clique para limpar` : pessoa.name}
-                className={`h-9 w-9 shrink-0 overflow-hidden rounded-full transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
+                className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                   ativo
-                    ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-800'
-                    : 'opacity-60 hover:opacity-100'
+                    ? 'border-indigo-500 dark:border-indigo-400'
+                    : 'border-slate-300 opacity-60 hover:opacity-100 dark:border-slate-600'
                 }`}
               >
                 {pessoa.avatar_url ? (
@@ -115,7 +115,7 @@ export function FiltroPessoas({
             type="button"
             onClick={() => setInicio((v) => Math.min(maxInicio, v + 1))}
             disabled={inicio >= maxInicio}
-            className="flex h-9 w-6 items-center justify-center rounded-lg text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 dark:hover:text-slate-200"
+            className="flex h-10 w-6 items-center justify-center rounded-lg text-slate-400 transition hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 dark:hover:text-slate-200"
             aria-label="Ver próximas pessoas"
             title="Próximas"
           >
@@ -129,7 +129,7 @@ export function FiltroPessoas({
           <button
             type="button"
             onClick={() => onSelecionar(null)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-300 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-300 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
             aria-label="Mostrar todos"
             title="Mostrar todos"
           >

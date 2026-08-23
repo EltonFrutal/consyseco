@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { AddButton } from '../ui/AddButton'
+import { CancelButton } from '../ui/ActionButtons'
 import { ColunaIcone, ICONES_COLUNA } from './ColunaIcone'
 import {
   CORES_COLUNA,
@@ -81,93 +82,34 @@ export function CenarioManagerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="max-h-full w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      {/* duas colunas e listas com altura fixa: cabe na tela sem rolagem */}
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Cenários e colunas</h3>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Cada cenário é um quadro com suas próprias colunas. Excluir um cenário apaga as tarefas dele.
         </p>
 
         {erro && (
-          <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+          <p role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
             {erro}
           </p>
         )}
 
-        <section className="mt-6">
-          <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Cenários</h4>
-          <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-700">
-            {cenarios.map((cenario) => (
-              <li key={cenario.id} className="flex items-center justify-between gap-3 py-2">
-                <span className="text-sm text-slate-700 dark:text-slate-200">{cenario.nome}</span>
-                <button
-                  type="button"
-                  disabled={ocupado}
-                  onClick={() => executar(() => excluirCenario(cenario.id))}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:bg-red-500/10 dark:text-red-400"
-                  aria-label={`Excluir cenário ${cenario.nome}`}
-                  title="Excluir cenário"
-                >
-                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M4 7h16" />
-                    <path d="M10 11v6M14 11v6" />
-                    <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
-                    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-                  </svg>
-                </button>
-              </li>
-            ))}
-            {cenarios.length === 0 && (
-              <li className="py-2 text-sm text-slate-500 dark:text-slate-400">Nenhum cenário cadastrado.</li>
-            )}
-          </ul>
-
-          <form onSubmit={handleNovoCenario} className="mt-3 flex items-end gap-3">
-            <div className="flex-1">
-              <label className={labelClass} htmlFor="novo-cenario">
-                Novo cenário
-              </label>
-              <input
-                id="novo-cenario"
-                type="text"
-                value={novoCenario}
-                onChange={(e) => setNovoCenario(e.target.value)}
-                className={inputClass}
-                placeholder="Comercial"
-              />
-            </div>
-            <AddButton onClick={() => handleNovoCenario()} label="Adicionar cenário" disabled={ocupado} />
-          </form>
-        </section>
-
-        {cenarioAtual && (
-          <section className="mt-8">
-            <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
-              Colunas de "{cenarioAtual.nome}"
-            </h4>
-            <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-700">
-              {colunas.map((coluna) => (
-                <li key={coluna.id} className="flex items-center justify-between gap-3 py-2">
-                  <span className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-                    <span
-                      className={`h-2.5 w-2.5 rounded-full ${CORES_COLUNA[coluna.cor]?.ponto ?? 'bg-slate-400'}`}
-                      aria-hidden="true"
-                    />
-                    <ColunaIcone icone={coluna.icone} className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-                    {coluna.nome}
-                    {coluna.is_conclusao && (
-                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-                        conclusão
-                      </span>
-                    )}
-                  </span>
+        <div className="mt-4 grid gap-5 md:grid-cols-2">
+          <section>
+            <h4 className="text-sm font-semibold text-slate-900 dark:text-white">Cenários</h4>
+            <ul className="mt-2 h-44 divide-y divide-slate-100 overflow-y-auto pr-1 dark:divide-slate-700">
+              {cenarios.map((cenario) => (
+                <li key={cenario.id} className="flex items-center justify-between gap-3 py-1.5">
+                  <span className="truncate text-sm text-slate-700 dark:text-slate-200">{cenario.nome}</span>
                   <button
                     type="button"
                     disabled={ocupado}
-                    onClick={() => executar(() => excluirColuna(coluna.id), cenarioAtual.id)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:bg-red-500/10 dark:text-red-400"
-                    aria-label={`Excluir coluna ${coluna.nome}`}
-                    title="Excluir coluna"
+                    onClick={() => executar(() => excluirCenario(cenario.id))}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:bg-red-500/10 dark:text-red-400"
+                    aria-label={`Excluir cenário ${cenario.nome}`}
+                    title="Excluir cenário"
                   >
                     <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M4 7h16" />
@@ -178,69 +120,132 @@ export function CenarioManagerModal({
                   </button>
                 </li>
               ))}
+              {cenarios.length === 0 && (
+                <li className="py-2 text-sm text-slate-500 dark:text-slate-400">Nenhum cenário cadastrado.</li>
+              )}
             </ul>
 
-            <form onSubmit={handleNovaColuna} className="mt-3 flex items-end gap-3">
+            <form onSubmit={handleNovoCenario} className="mt-2 flex items-end gap-2">
               <div className="flex-1">
-                <label className={labelClass} htmlFor="nova-coluna">
-                  Nova coluna
+                <label className={labelClass} htmlFor="novo-cenario">
+                  Novo cenário
                 </label>
                 <input
-                  id="nova-coluna"
+                  id="novo-cenario"
                   type="text"
-                  value={novaColuna}
-                  onChange={(e) => setNovaColuna(e.target.value)}
+                  value={novoCenario}
+                  onChange={(e) => setNovoCenario(e.target.value)}
                   className={inputClass}
-                  placeholder="Em revisão"
+                  placeholder="Comercial"
                 />
               </div>
-              <div className="w-28">
-                <label className={labelClass} htmlFor="icone-coluna">
-                  Ícone
-                </label>
-                <select
-                  id="icone-coluna"
-                  value={iconeColuna}
-                  onChange={(e) => setIconeColuna(e.target.value)}
-                  className={inputClass}
-                >
-                  {ICONES_COLUNA.map((icone) => (
-                    <option key={icone.valor} value={icone.valor}>
-                      {icone.rotulo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="w-28">
-                <label className={labelClass} htmlFor="cor-coluna">
-                  Cor
-                </label>
-                <select
-                  id="cor-coluna"
-                  value={corColuna}
-                  onChange={(e) => setCorColuna(e.target.value)}
-                  className={inputClass}
-                >
-                  {Object.entries(CORES_COLUNA).map(([valor, config]) => (
-                    <option key={valor} value={valor}>
-                      {config.rotulo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <AddButton onClick={() => handleNovaColuna()} label="Adicionar coluna" disabled={ocupado} />
+              <AddButton onClick={() => handleNovoCenario()} label="Adicionar cenário" disabled={ocupado} />
             </form>
           </section>
-        )}
 
-        <div className="mt-8 flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            Fechar
-          </button>
+          <section>
+            <h4 className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+              {cenarioAtual ? `Colunas de "${cenarioAtual.nome}"` : 'Colunas'}
+            </h4>
+
+            {cenarioAtual ? (
+              <>
+                <ul className="mt-2 h-44 divide-y divide-slate-100 overflow-y-auto pr-1 dark:divide-slate-700">
+                  {colunas.map((coluna) => (
+                    <li key={coluna.id} className="flex items-center justify-between gap-2 py-1.5">
+                      <span className="flex min-w-0 items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                        <span
+                          className={`h-2.5 w-2.5 shrink-0 rounded-full ${CORES_COLUNA[coluna.cor]?.ponto ?? 'bg-slate-400'}`}
+                          aria-hidden="true"
+                        />
+                        <ColunaIcone icone={coluna.icone} className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
+                        <span className="truncate">{coluna.nome}</span>
+                        {coluna.is_conclusao && (
+                          <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                            conclusão
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={ocupado}
+                        onClick={() => executar(() => excluirColuna(coluna.id), cenarioAtual.id)}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 dark:bg-red-500/10 dark:text-red-400"
+                        aria-label={`Excluir coluna ${coluna.nome}`}
+                        title="Excluir coluna"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M4 7h16" />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+                          <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                <form onSubmit={handleNovaColuna} className="mt-2 flex items-end gap-2">
+                  <div className="min-w-0 flex-1">
+                    <label className={labelClass} htmlFor="nova-coluna">
+                      Nova coluna
+                    </label>
+                    <input
+                      id="nova-coluna"
+                      type="text"
+                      value={novaColuna}
+                      onChange={(e) => setNovaColuna(e.target.value)}
+                      className={inputClass}
+                      placeholder="Em revisão"
+                    />
+                  </div>
+                  <div className="w-24">
+                    <label className={labelClass} htmlFor="icone-coluna">
+                      Ícone
+                    </label>
+                    <select
+                      id="icone-coluna"
+                      value={iconeColuna}
+                      onChange={(e) => setIconeColuna(e.target.value)}
+                      className={inputClass}
+                    >
+                      {ICONES_COLUNA.map((icone) => (
+                        <option key={icone.valor} value={icone.valor}>
+                          {icone.rotulo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="w-24">
+                    <label className={labelClass} htmlFor="cor-coluna">
+                      Cor
+                    </label>
+                    <select
+                      id="cor-coluna"
+                      value={corColuna}
+                      onChange={(e) => setCorColuna(e.target.value)}
+                      className={inputClass}
+                    >
+                      {Object.entries(CORES_COLUNA).map(([valor, config]) => (
+                        <option key={valor} value={valor}>
+                          {config.rotulo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <AddButton onClick={() => handleNovaColuna()} label="Adicionar coluna" disabled={ocupado} />
+                </form>
+              </>
+            ) : (
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+                Cadastre um cenário para definir as colunas dele.
+              </p>
+            )}
+          </section>
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <CancelButton onClick={onClose} label="Fechar" />
         </div>
       </div>
     </div>
