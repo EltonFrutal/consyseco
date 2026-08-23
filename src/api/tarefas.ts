@@ -112,6 +112,26 @@ export async function listarTarefas(cenarioId: string): Promise<Tarefa[]> {
   return assert(data as Tarefa[] | null, error) ?? []
 }
 
+/** Todas as colunas, de todos os cenários — usado pelo dashboard. */
+export async function listarTodasColunas(): Promise<Coluna[]> {
+  const { data, error } = await supabase
+    .from('colunas')
+    .select('id, cenario_id, nome, ordem, cor')
+    .order('ordem', { ascending: true })
+  return assert(data as Coluna[] | null, error) ?? []
+}
+
+/** Todas as tarefas, de todos os cenários — usado pelo dashboard. */
+export async function listarTodasTarefas(): Promise<Tarefa[]> {
+  const { data, error } = await supabase
+    .from('tarefas')
+    .select(
+      'id, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, prazo, prioridade, ordem, updated_at',
+    )
+    .order('prazo', { ascending: true, nullsFirst: false })
+  return assert(data as Tarefa[] | null, error) ?? []
+}
+
 export async function criarTarefa(input: TarefaInput & { ordem?: number }): Promise<Tarefa> {
   const { data, error } = await supabase
     .from('tarefas')
