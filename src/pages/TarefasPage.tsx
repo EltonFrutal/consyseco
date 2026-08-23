@@ -156,8 +156,8 @@ export function TarefasPage() {
 
   return (
     <AppLayout>
-      <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6 dark:bg-slate-800">
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-sm sm:p-6 dark:bg-slate-800">
+        <header className="mb-4 flex shrink-0 flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Tarefas</h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -239,7 +239,7 @@ export function TarefasPage() {
         )}
 
         {!carregando && colunas.length > 0 && (
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+          <div className="grid min-h-0 flex-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
             {colunas.map((coluna) => {
               const daColuna = tarefasVisiveis.filter((t) => t.coluna_id === coluna.id)
               const cor = CORES_COLUNA[coluna.cor] ?? CORES_COLUNA.slate
@@ -258,13 +258,13 @@ export function TarefasPage() {
                     if (arrastada) handleMover(arrastada, coluna.id)
                     setArrastada(null)
                   }}
-                  className={`flex min-w-0 flex-col rounded-2xl border p-3 transition ${
+                  className={`flex min-h-0 min-w-0 flex-col rounded-2xl border p-3 transition ${
                     colunaAlvo === coluna.id
                       ? 'border-indigo-400 bg-indigo-50/50 dark:border-indigo-500 dark:bg-indigo-500/5'
                       : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40'
                   }`}
                 >
-                  <header className="mb-3 flex items-center justify-between gap-2">
+                  <header className="mb-3 flex shrink-0 items-center justify-between gap-2">
                     <h3 className={`flex min-w-0 items-center gap-2 text-sm font-semibold ${cor.cabecalho}`}>
                       <ColunaIcone icone={coluna.icone} className="h-4 w-4 shrink-0" />
                       <span className="truncate">{coluna.nome}</span>
@@ -274,7 +274,7 @@ export function TarefasPage() {
                     </span>
                   </header>
 
-                  <div className="flex flex-col gap-2">
+                  <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
                     {daColuna.map((tarefa) => (
                       <TaskCard
                         key={tarefa.id}
