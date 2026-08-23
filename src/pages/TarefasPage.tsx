@@ -32,7 +32,7 @@ export function TarefasPage() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const [cenarios, setCenarios] = useState<Cenario[]>([])
-  const [cenarioId, setCenarioId] = useState('')
+  const [cenarioId, setCenarioId] = useState(TODOS)
   const [colunas, setColunas] = useState<Coluna[]>([])
   const [todasColunas, setTodasColunas] = useState<Coluna[]>([])
   const [tarefas, setTarefas] = useState<Tarefa[]>([])
@@ -82,7 +82,9 @@ export function TarefasPage() {
       setCenarios(lista)
       setTodasColunas(cols)
       setPessoas((perfis as Profile[]) ?? [])
-      const escolhido = selecionar ?? (lista.some((c) => c.id === cenarioId) ? cenarioId : lista[0]?.id ?? '')
+      // o padrão é ver tudo; só troca se pedirem um cenário específico
+      const escolhido =
+        selecionar ?? (cenarioId === TODOS || lista.some((c) => c.id === cenarioId) ? cenarioId : TODOS)
       setCenarioId(escolhido)
       if (!escolhido) {
         setColunas([])
@@ -207,7 +209,7 @@ export function TarefasPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-wrap items-end gap-6">
             <FiltroPessoas
               dimensao={dimensaoFiltro}
               onDimensao={setDimensaoFiltro}

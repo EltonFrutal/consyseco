@@ -86,10 +86,8 @@ export function FiltroPessoas({
                 aria-pressed={ativo}
                 aria-label={`Mostrar apenas tarefas de ${pessoa.name}`}
                 title={ativo ? `${pessoa.name} — clique para limpar` : pessoa.name}
-                className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                  ativo
-                    ? 'border-indigo-500 dark:border-indigo-400'
-                    : 'border-slate-300 opacity-60 hover:opacity-100 dark:border-slate-600'
+                className={`h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-indigo-500 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-indigo-400 ${
+                  ativo ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-800' : 'opacity-50 hover:opacity-100'
                 }`}
               >
                 {pessoa.avatar_url ? (
