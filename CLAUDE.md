@@ -118,7 +118,7 @@ docs/padroes.md   # padrões de UI e de auditoria
 - **Tema claro/escuro:** toda cor precisa do par `dark:`. O tema é uma classe `dark` no `<html>`, controlada por `ThemeToggle`.
 - Padrões visuais fechados com o usuário (ver `docs/padroes.md`): ações **somente ícone** (com `aria-label` e `title`), clique na linha abre a edição, status booleano como chave liga/desliga, colunas de auditoria no fim da listagem.
 - **Incluir registro é sempre o componente `AddButton`** (botão só com `+`). Tela nova que cadastra algo usa esse componente — não criar botão com texto "Novo X".
-- **Salvar / Cancelar / Excluir são só ícone**, pelos componentes de `src/components/ui/ActionButtons.tsx`. Botão com nome próprio de ação (ex.: "Salvar e conectar") mantém o texto.
+- **Salvar (disquete) e Cancelar (X) são ícone + texto; Excluir é só a lixeira** — componentes em `src/components/ui/ActionButtons.tsx`. Botão com nome próprio de ação (ex.: "Salvar e conectar") mantém o texto.
 
 ## 9. Definition of Done e fluxo de entrega
 

@@ -37,10 +37,9 @@ A dica do embed é o **nome da coluna** — usar o nome da constraint (`profiles
 ## Botões
 
 - **Salvar, Cancelar e Excluir usam `SaveButton`, `CancelButton` e `DeleteButton`**
-  (`src/components/ui/ActionButtons.tsx`): quadrados de 44px, somente ícone — check indigo,
-  X neutro e lixeira vermelha — com `aria-label`/`title`. Ações com nome próprio
-  ("Salvar e conectar", "Remover mesmo assim", "Tentar de novo") continuam com texto,
-  porque o ícone sozinho não diz qual é a ação.
+  (`src/components/ui/ActionButtons.tsx`): **Salvar** (disquete) e **Cancelar** (X) levam
+  ícone + texto; **Excluir** é só a lixeira, em 44px com `aria-label`/`title`.
+  Ações com nome próprio ("Salvar e conectar", "Remover mesmo assim") continuam com texto.
 - **Ação de incluir usa sempre o `AddButton`** (`src/components/ui/AddButton.tsx`): quadrado de 44px,
   fundo indigo, somente o ícone de `+`, com `aria-label` e `title` descrevendo a ação
   ("Novo usuário", "Nova tarefa", "Adicionar coluna"). Nunca escrever o texto no botão.

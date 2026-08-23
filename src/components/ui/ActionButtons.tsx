@@ -1,15 +1,11 @@
 /**
- * Botões padrão de ação do projeto: somente ícone, 44px, com aria-label e title.
- * Salvar (check indigo), Cancelar (X neutro) e Excluir (lixeira vermelha).
- * Toda tela nova usa estes componentes — ver docs/padroes.md.
+ * Botões padrão de ação do projeto — ver docs/padroes.md.
+ * Salvar e Cancelar levam ícone + texto; Excluir é somente o ícone da lixeira.
  */
-
-const base =
-  'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800'
 
 const iconeProps = {
   viewBox: '0 0 24 24',
-  className: 'h-5 w-5',
+  className: 'h-[18px] w-[18px] shrink-0',
   fill: 'none',
   stroke: 'currentColor',
   strokeWidth: 1.8,
@@ -18,6 +14,9 @@ const iconeProps = {
   'aria-hidden': true,
 }
 
+const comTexto =
+  'flex h-11 items-center gap-2 rounded-lg px-4 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800'
+
 interface BotaoProps {
   onClick?: () => void
   disabled?: boolean
@@ -25,19 +24,21 @@ interface BotaoProps {
   label?: string
 }
 
-export function SaveButton({ onClick, disabled = false, label = 'Salvar' }: BotaoProps & { type?: 'submit' }) {
+export function SaveButton({ onClick, disabled = false, label = 'Salvar' }: BotaoProps) {
   return (
     <button
       type="submit"
       onClick={onClick}
       disabled={disabled}
-      aria-label={label}
-      title={label}
-      className={`${base} bg-indigo-600 text-white hover:bg-indigo-500 focus:ring-indigo-500`}
+      className={`${comTexto} bg-indigo-600 text-white hover:bg-indigo-500 focus:ring-indigo-500`}
     >
+      {/* disquete */}
       <svg {...iconeProps}>
-        <path d="M20 6 9 17l-5-5" />
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+        <path d="M17 21v-8H7v8" />
+        <path d="M7 3v5h8" />
       </svg>
+      {label}
     </button>
   )
 }
@@ -48,13 +49,12 @@ export function CancelButton({ onClick, disabled = false, label = 'Cancelar' }: 
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-label={label}
-      title={label}
-      className={`${base} border border-slate-300 text-slate-600 hover:bg-slate-100 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700`}
+      className={`${comTexto} border border-slate-300 text-slate-600 hover:bg-slate-100 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700`}
     >
       <svg {...iconeProps}>
         <path d="M6 6l12 12M18 6L6 18" />
       </svg>
+      {label}
     </button>
   )
 }
@@ -67,9 +67,9 @@ export function DeleteButton({ onClick, disabled = false, label = 'Excluir' }: B
       disabled={disabled}
       aria-label={label}
       title={label}
-      className={`${base} border border-red-300 text-red-600 hover:bg-red-50 focus:ring-red-500 dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-500/10`}
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-red-300 text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-500/10 dark:focus:ring-offset-slate-800"
     >
-      <svg {...iconeProps}>
+      <svg {...iconeProps} className="h-5 w-5 shrink-0">
         <path d="M4 7h16" />
         <path d="M10 11v6M14 11v6" />
         <path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
