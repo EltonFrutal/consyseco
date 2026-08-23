@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
-import type { Coluna, Prioridade, Tarefa, TarefaInput } from '../../api/tarefas'
+import { FinalizarError, finalizarTarefa, type Coluna, type Prioridade, type Tarefa, type TarefaInput } from '../../api/tarefas'
 import type { Profile } from '../../types/profile'
+import { useAuth } from '../../contexts/AuthContext'
 
 interface TaskFormModalProps {
   open: boolean
@@ -11,6 +12,7 @@ interface TaskFormModalProps {
   onClose: () => void
   onSubmit: (input: TarefaInput) => Promise<void>
   onDelete: (tarefa: Tarefa) => Promise<void>
+  onFinalizada: () => Promise<void>
 }
 
 const inputClass =
@@ -26,21 +28,33 @@ export function TaskFormModal({
   onClose,
   onSubmit,
   onDelete,
+  onFinalizada,
 }: TaskFormModalProps) {
+  const { user } = useAuth()
   const [titulo, setTitulo] = useState(tarefa?.titulo ?? '')
   const [descricao, setDescricao] = useState(tarefa?.descricao ?? '')
   const [colunaId, setColunaId] = useState(tarefa?.coluna_id ?? colunas[0]?.id ?? '')
   const [solicitanteId, setSolicitanteId] = useState(tarefa?.solicitante_id ?? '')
   const [responsavelId, setResponsavelId] = useState(tarefa?.responsavel_id ?? '')
+  const [executorId, setExecutorId] = useState(tarefa?.executor_id ?? '')
   const [prazo, setPrazo] = useState(tarefa?.prazo ?? '')
   const [prioridade, setPrioridade] = useState<Prioridade>(tarefa?.prioridade ?? 'media')
   const [erro, setErro] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
+  const [finalizando, setFinalizando] = useState(false)
+  const [pedindoSenha, setPedindoSenha] = useState(false)
+  const [senha, setSenha] = useState('')
+  const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
 
   if (!open) return null
 
   const editando = Boolean(tarefa)
+  const colunaSalva = tarefa ? colunas.find((c) => c.id === tarefa.coluna_id) : undefined
+  const podeFinalizar = Boolean(tarefa && colunaSalva?.is_conclusao && !tarefa.finalizada_em)
+  const souOResponsavel = Boolean(tarefa?.responsavel_id && tarefa.responsavel_id === user?.id)
+  const nomeResponsavel = pessoas.find((p) => p.id === tarefa?.responsavel_id)?.name
+  const quemAlterou = pessoas.find((p) => p.id === tarefa?.updated_by)?.name
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -64,6 +78,7 @@ export function TaskFormModal({
         descricao: descricao.trim() || null,
         solicitante_id: solicitanteId || null,
         responsavel_id: responsavelId || null,
+        executor_id: executorId || null,
         prazo: prazo || null,
         prioridade,
       })
@@ -71,6 +86,26 @@ export function TaskFormModal({
       setErro(err instanceof Error ? err.message : 'Não foi possível salvar a tarefa.')
     } finally {
       setSalvando(false)
+    }
+  }
+
+  async function handleFinalizar() {
+    if (!tarefa) return
+    setFinalizando(true)
+    setErroFinalizar(null)
+    try {
+      await finalizarTarefa(tarefa.id, senha || undefined)
+      await onFinalizada()
+    } catch (err) {
+      if (err instanceof FinalizarError) {
+        setErroFinalizar(err.message)
+        setPedindoSenha(err.senhaObrigatoria)
+      } else {
+        setErroFinalizar('Não foi possível finalizar a tarefa.')
+      }
+      setSenha('')
+    } finally {
+      setFinalizando(false)
     }
   }
 
@@ -161,6 +196,25 @@ export function TaskFormModal({
             </div>
 
             <div>
+              <label className={labelClass} htmlFor="tarefa-executor">
+                Executor
+              </label>
+              <select
+                id="tarefa-executor"
+                value={executorId}
+                onChange={(e) => setExecutorId(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Ninguém</option>
+                {pessoas.map((pessoa) => (
+                  <option key={pessoa.id} value={pessoa.id}>
+                    {pessoa.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
               <label className={labelClass} htmlFor="tarefa-prazo">
                 Prazo
               </label>
@@ -212,6 +266,51 @@ export function TaskFormModal({
             <p role="alert" className="text-sm text-red-600 dark:text-red-400">
               {erro}
             </p>
+          )}
+
+          {podeFinalizar && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+              <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                Finalizar tarefa
+              </p>
+              <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
+                {souOResponsavel
+                  ? 'Você é o responsável: pode finalizar direto. A tarefa sai do quadro.'
+                  : `Só ${nomeResponsavel ?? 'o responsável'} pode finalizar — informe a senha dele.`}
+              </p>
+
+              {!souOResponsavel && (
+                <div className="mt-2">
+                  <label className="sr-only" htmlFor="tarefa-senha-responsavel">
+                    Senha do responsável
+                  </label>
+                  <input
+                    id="tarefa-senha-responsavel"
+                    type="password"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    autoComplete="off"
+                    placeholder="Senha do responsável"
+                    className="block w-full rounded-lg border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
+                  />
+                </div>
+              )}
+
+              {erroFinalizar && (
+                <p role="alert" className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
+                  {erroFinalizar}
+                </p>
+              )}
+
+              <button
+                type="button"
+                onClick={handleFinalizar}
+                disabled={finalizando || (!souOResponsavel && pedindoSenha && !senha)}
+                className="mt-3 min-h-11 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-slate-800"
+              >
+                {finalizando ? 'Finalizando...' : 'Finalizar tarefa'}
+              </button>
+            </div>
           )}
 
           {confirmandoExclusao && (
@@ -266,6 +365,19 @@ export function TaskFormModal({
               </button>
             </div>
           </div>
+
+          {tarefa && (
+            <p className="border-t border-slate-100 pt-3 text-[11px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+              Criada em {new Date(tarefa.created_at).toLocaleString('pt-BR')}
+              {' · '}
+              Alterada em {new Date(tarefa.updated_at).toLocaleString('pt-BR')}
+              {' por '}
+              {quemAlterou ?? '—'}
+              {tarefa.data_conclusao && (
+                <> · Concluída em {new Date(tarefa.data_conclusao).toLocaleString('pt-BR')}</>
+              )}
+            </p>
+          )}
         </form>
       </div>
     </div>

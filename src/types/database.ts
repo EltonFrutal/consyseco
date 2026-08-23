@@ -63,7 +63,9 @@ export type Database = {
           cenario_id: string
           cor: string
           created_at: string
+          icone: string
           id: string
+          is_conclusao: boolean
           nome: string
           ordem: number
           updated_at: string
@@ -73,7 +75,9 @@ export type Database = {
           cenario_id: string
           cor?: string
           created_at?: string
+          icone?: string
           id?: string
+          is_conclusao?: boolean
           nome: string
           ordem?: number
           updated_at?: string
@@ -83,7 +87,9 @@ export type Database = {
           cenario_id?: string
           cor?: string
           created_at?: string
+          icone?: string
           id?: string
+          is_conclusao?: boolean
           nome?: string
           ordem?: number
           updated_at?: string
@@ -161,7 +167,11 @@ export type Database = {
           cenario_id: string
           coluna_id: string
           created_at: string
+          data_conclusao: string | null
           descricao: string | null
+          executor_id: string | null
+          finalizada_em: string | null
+          finalizada_por: string | null
           id: string
           ordem: number
           prazo: string | null
@@ -176,7 +186,11 @@ export type Database = {
           cenario_id: string
           coluna_id: string
           created_at?: string
+          data_conclusao?: string | null
           descricao?: string | null
+          executor_id?: string | null
+          finalizada_em?: string | null
+          finalizada_por?: string | null
           id?: string
           ordem?: number
           prazo?: string | null
@@ -191,7 +205,11 @@ export type Database = {
           cenario_id?: string
           coluna_id?: string
           created_at?: string
+          data_conclusao?: string | null
           descricao?: string | null
+          executor_id?: string | null
+          finalizada_em?: string | null
+          finalizada_por?: string | null
           id?: string
           ordem?: number
           prazo?: string | null
@@ -215,6 +233,20 @@ export type Database = {
             columns: ["coluna_id"]
             isOneToOne: false
             referencedRelation: "colunas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_executor_id_fkey"
+            columns: ["executor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tarefas_finalizada_por_fkey"
+            columns: ["finalizada_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {

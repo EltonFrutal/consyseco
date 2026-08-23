@@ -50,20 +50,21 @@ src/
     layout/       # AppLayout (sidebar + header), ThemeToggle
     ui/           # componentes genéricos (ConfirmDialog)
     users/        # UsersTable, UserFormModal
-    tarefas/      # TaskCard, TaskFormModal, CenarioManagerModal
+    tarefas/      # TaskCard, TaskFormModal, CenarioManagerModal, ColunaIcone
     whatsapp/     # InstanceForm, QrConnect, ConnectedCard, DeleteInstanceDialog
   contexts/       # AuthContext (sessão + profile do usuário logado)
   hooks/          # useHasAdminUser
   lib/            # supabaseClient, authErrors (tradução de mensagens do Auth)
-  pages/          # LoginPage, DashboardPage, UsersPage, TarefasPage, WhatsAppPage
+  pages/          # LoginPage, DashboardPage, UsersPage, TarefasPage, FinalizadasPage, WhatsAppPage
   routes/         # ProtectedRoute
   types/          # profile.ts (à mão) e database.ts (gerado pelo Supabase)
 supabase/
-  migrations/     # 0001_init … 0006_profiles_country_code, 0007_tarefas_kanban
+  migrations/     # 0001_init … 0007_tarefas_kanban, 0008_tarefas_finalizacao
   functions/
     admin-users/  # operações privilegiadas de usuário: create, update, set-status
     wa-instance-create|qr|status|delete/  # integração uazapi (uma função por operação)
     wa-send-test/ # envio de mensagem de teste pela instância do usuário
+    finalizar-tarefa/ # finaliza a tarefa validando a senha do responsável
 docs/padroes.md   # padrões de UI e de auditoria
 ```
 
@@ -210,6 +211,10 @@ Formato:
 - **`wa-instance-create` aceita os dois tokens:** tenta `GET /instance/status` (token de instância) e, em 401/403, tenta `POST /instance/create` com `admintoken`; o admintoken é guardado para recriar a instância depois.
 - **Kanban modelado em três níveis:** `cenarios` (quadro) → `colunas` (etapas, cor guardada como token e não como classe Tailwind) → `tarefas`. Cenário novo já nasce com A fazer / Em andamento / Concluído por trigger; excluir cenário cascateia colunas e tarefas.
 - **Tarefas são compartilhadas entre admins ativos** — policies amarradas em `public.is_active_admin()`, não em `owner_id`, porque o quadro é do time. Diferente de `whatsapp_instances`, que é por dono.
+- **Concluir ≠ finalizar.** `data_conclusao` é preenchida/zerada por trigger quando a tarefa entra ou sai da coluna marcada com `is_conclusao`; `finalizada_em` só é gravada pela edge function `finalizar-tarefa`, que exige ser o responsável ou a senha dele. Tarefa finalizada some do quadro.
+- **A coluna de conclusão é marcada com `colunas.is_conclusao`**, não pelo nome — cada cenário pode chamar a etapa final do que quiser.
+- **Ícone da coluna guardado como token** (`lista`, `play`, `relogio`, `check`...), traduzido em `ColunaIcone`; mesmo motivo da cor: classe/SVG montado por string some no purge.
+- **Colunas sensíveis de `tarefas` fora do alcance do cliente**: `finalizada_em`, `finalizada_por` e `data_conclusao` não têm grant de escrita para `authenticated` — só a edge function e os triggers escrevem.
 - **Tailwind 4 sem arquivo de config** — não recriar `tailwind.config.js` "para padronizar".
 - **Sem biblioteca de formulário/estado** — o projeto é pequeno; introduzir uma exige justificativa e aprovação.
 

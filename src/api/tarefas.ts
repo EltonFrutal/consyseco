@@ -1,3 +1,4 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabaseClient'
 
 export type Prioridade = 'baixa' | 'media' | 'alta'
@@ -16,6 +17,8 @@ export interface Coluna {
   nome: string
   ordem: number
   cor: string
+  icone: string
+  is_conclusao: boolean
 }
 
 export interface Tarefa {
@@ -26,10 +29,16 @@ export interface Tarefa {
   descricao: string | null
   solicitante_id: string | null
   responsavel_id: string | null
+  executor_id: string | null
   prazo: string | null
   prioridade: Prioridade
   ordem: number
+  data_conclusao: string | null
+  finalizada_em: string | null
+  finalizada_por: string | null
+  created_at: string
   updated_at: string
+  updated_by: string | null
 }
 
 export interface TarefaInput {
@@ -39,9 +48,13 @@ export interface TarefaInput {
   descricao: string | null
   solicitante_id: string | null
   responsavel_id: string | null
+  executor_id: string | null
   prazo: string | null
   prioridade: Prioridade
 }
+
+const TAREFA_COLUNAS =
+  'id, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, ordem, data_conclusao, finalizada_em, finalizada_por, created_at, updated_at, updated_by'
 
 function assert<T>(data: T | null, error: { message: string } | null): T {
   if (error) throw new Error(error.message)
@@ -80,17 +93,23 @@ export async function excluirCenario(id: string): Promise<void> {
 export async function listarColunas(cenarioId: string): Promise<Coluna[]> {
   const { data, error } = await supabase
     .from('colunas')
-    .select('id, cenario_id, nome, ordem, cor')
+    .select('id, cenario_id, nome, ordem, cor, icone, is_conclusao')
     .eq('cenario_id', cenarioId)
     .order('ordem', { ascending: true })
   return assert(data as Coluna[] | null, error) ?? []
 }
 
-export async function criarColuna(cenarioId: string, nome: string, cor: string, ordem: number) {
+export async function criarColuna(
+  cenarioId: string,
+  nome: string,
+  cor: string,
+  ordem: number,
+  icone: string,
+) {
   const { data, error } = await supabase
     .from('colunas')
-    .insert({ cenario_id: cenarioId, nome, cor, ordem })
-    .select('id, cenario_id, nome, ordem, cor')
+    .insert({ cenario_id: cenarioId, nome, cor, ordem, icone })
+    .select('id, cenario_id, nome, ordem, cor, icone, is_conclusao')
     .single()
   return assert(data as Coluna | null, error)
 }
@@ -104,9 +123,10 @@ export async function listarTarefas(cenarioId: string): Promise<Tarefa[]> {
   const { data, error } = await supabase
     .from('tarefas')
     .select(
-      'id, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, prazo, prioridade, ordem, updated_at',
+      TAREFA_COLUNAS,
     )
     .eq('cenario_id', cenarioId)
+    .is('finalizada_em', null)
     .order('ordem', { ascending: true })
     .order('created_at', { ascending: true })
   return assert(data as Tarefa[] | null, error) ?? []
@@ -116,7 +136,7 @@ export async function listarTarefas(cenarioId: string): Promise<Tarefa[]> {
 export async function listarTodasColunas(): Promise<Coluna[]> {
   const { data, error } = await supabase
     .from('colunas')
-    .select('id, cenario_id, nome, ordem, cor')
+    .select('id, cenario_id, nome, ordem, cor, icone, is_conclusao')
     .order('ordem', { ascending: true })
   return assert(data as Coluna[] | null, error) ?? []
 }
@@ -126,7 +146,7 @@ export async function listarTodasTarefas(): Promise<Tarefa[]> {
   const { data, error } = await supabase
     .from('tarefas')
     .select(
-      'id, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, prazo, prioridade, ordem, updated_at',
+      TAREFA_COLUNAS,
     )
     .order('prazo', { ascending: true, nullsFirst: false })
   return assert(data as Tarefa[] | null, error) ?? []
@@ -137,7 +157,7 @@ export async function criarTarefa(input: TarefaInput & { ordem?: number }): Prom
     .from('tarefas')
     .insert(input)
     .select(
-      'id, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, prazo, prioridade, ordem, updated_at',
+      TAREFA_COLUNAS,
     )
     .single()
   return assert(data as Tarefa | null, error)
@@ -192,4 +212,52 @@ export const PRIORIDADES: Record<Prioridade, { rotulo: string; ponto: string }> 
   baixa: { rotulo: 'Baixa', ponto: 'bg-slate-400' },
   media: { rotulo: 'Média', ponto: 'bg-amber-500' },
   alta: { rotulo: 'Alta', ponto: 'bg-red-500' },
+}
+
+/** Finaliza a tarefa. Sem ser o responsável, a senha dele é obrigatória. */
+export async function finalizarTarefa(id: string, senha?: string) {
+  const { data, error } = await supabase.functions.invoke('finalizar-tarefa', {
+    body: { id, senha },
+  })
+
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      const corpo = (await error.context.json().catch(() => null)) as
+        | { error?: string; senhaObrigatoria?: boolean }
+        | null
+      throw new FinalizarError(corpo?.error ?? error.message, Boolean(corpo?.senhaObrigatoria))
+    }
+    throw new FinalizarError(error.message, false)
+  }
+
+  return data as { finalizada_em: string; finalizada_por: string }
+}
+
+export class FinalizarError extends Error {
+  senhaObrigatoria: boolean
+
+  constructor(message: string, senhaObrigatoria: boolean) {
+    super(message)
+    this.name = 'FinalizarError'
+    this.senhaObrigatoria = senhaObrigatoria
+  }
+}
+
+export interface FiltroFinalizadas {
+  texto: string
+  campoData: 'conclusao' | 'finalizacao'
+  de: string
+  ate: string
+}
+
+/** Lista das finalizadas — o filtro de texto é aplicado no cliente, sobre os nomes. */
+export async function listarFinalizadas(filtro: FiltroFinalizadas): Promise<Tarefa[]> {
+  const coluna = filtro.campoData === 'conclusao' ? 'data_conclusao' : 'finalizada_em'
+  let query = supabase.from('tarefas').select(TAREFA_COLUNAS).not('finalizada_em', 'is', null)
+
+  if (filtro.de) query = query.gte(coluna, `${filtro.de}T00:00:00`)
+  if (filtro.ate) query = query.lte(coluna, `${filtro.ate}T23:59:59`)
+
+  const { data, error } = await query.order(coluna, { ascending: false })
+  return assert(data as Tarefa[] | null, error) ?? []
 }

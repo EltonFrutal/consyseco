@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { AddButton } from '../ui/AddButton'
+import { ColunaIcone, ICONES_COLUNA } from './ColunaIcone'
 import {
   CORES_COLUNA,
   criarColuna,
@@ -34,6 +35,7 @@ export function CenarioManagerModal({
   const [novoCenario, setNovoCenario] = useState('')
   const [novaColuna, setNovaColuna] = useState('')
   const [corColuna, setCorColuna] = useState('slate')
+  const [iconeColuna, setIconeColuna] = useState('lista')
   const [erro, setErro] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
 
@@ -73,7 +75,7 @@ export function CenarioManagerModal({
     e?.preventDefault()
     if (!novaColuna.trim() || !cenarioAtual) return
     await executar(async () => {
-      await criarColuna(cenarioAtual.id, novaColuna.trim(), corColuna, colunas.length)
+      await criarColuna(cenarioAtual.id, novaColuna.trim(), corColuna, colunas.length, iconeColuna)
       setNovaColuna('')
     }, cenarioAtual.id)
   }
@@ -151,7 +153,13 @@ export function CenarioManagerModal({
                       className={`h-2.5 w-2.5 rounded-full ${CORES_COLUNA[coluna.cor]?.ponto ?? 'bg-slate-400'}`}
                       aria-hidden="true"
                     />
+                    <ColunaIcone icone={coluna.icone} className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     {coluna.nome}
+                    {coluna.is_conclusao && (
+                      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                        conclusão
+                      </span>
+                    )}
                   </span>
                   <button
                     type="button"
@@ -186,7 +194,24 @@ export function CenarioManagerModal({
                   placeholder="Em revisão"
                 />
               </div>
-              <div className="w-32">
+              <div className="w-28">
+                <label className={labelClass} htmlFor="icone-coluna">
+                  Ícone
+                </label>
+                <select
+                  id="icone-coluna"
+                  value={iconeColuna}
+                  onChange={(e) => setIconeColuna(e.target.value)}
+                  className={inputClass}
+                >
+                  {ICONES_COLUNA.map((icone) => (
+                    <option key={icone.valor} value={icone.valor}>
+                      {icone.rotulo}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-28">
                 <label className={labelClass} htmlFor="cor-coluna">
                   Cor
                 </label>

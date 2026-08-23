@@ -27,6 +27,7 @@ export function TaskCard({
   arrastando,
 }: TaskCardProps) {
   const responsavel = tarefa.responsavel_id ? pessoas.get(tarefa.responsavel_id) : undefined
+  const executor = tarefa.executor_id ? pessoas.get(tarefa.executor_id) : undefined
   const prioridade = PRIORIDADES[tarefa.prioridade]
 
   const hoje = new Date()
@@ -116,6 +117,31 @@ export function TaskCard({
             </svg>
             {new Date(`${tarefa.prazo}T00:00:00`).toLocaleDateString('pt-BR')}
           </span>
+        )}
+      </div>
+
+      <div className="mt-2 flex min-h-6 items-center gap-1.5 text-xs">
+        {executor ? (
+          <>
+            {executor.avatar_url ? (
+              <img src={executor.avatar_url} alt="" className="h-5 w-5 shrink-0 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                {iniciais(executor.name)}
+              </span>
+            )}
+            <span className="truncate text-slate-500 dark:text-slate-400" title={`Executor: ${executor.name}`}>
+              Executor: {executor.name}
+            </span>
+          </>
+        ) : (
+          <>
+            <span
+              className="h-5 w-5 shrink-0 rounded-full border border-dashed border-slate-300 dark:border-slate-600"
+              aria-hidden="true"
+            />
+            <span className="truncate text-slate-400 dark:text-slate-500">Sem executor</span>
+          </>
         )}
       </div>
 

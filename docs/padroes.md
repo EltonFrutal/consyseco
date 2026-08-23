@@ -43,6 +43,12 @@ A dica do embed é o **nome da coluna** — usar o nome da constraint (`profiles
   com `aria-label` e `title`.
 - Botões de formulário dentro de modal (Salvar / Cancelar) continuam com texto.
 
+## Auditoria na tela de edição
+
+- Toda modal de edição mostra, no rodapé e em texto discreto (11px, cinza):
+  **Criada em**, **Alterada em** e **por quem** — e, quando existir, a data de conclusão.
+  Não é um bloco destacado: é rodapé.
+
 ## Listagens
 
 - Colunas de auditoria no fim da tabela: **Criado em**, **Alterado em** (data + hora), **Alterado por** (nome; `—` quando nulo).

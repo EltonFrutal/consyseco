@@ -4,6 +4,7 @@ import { TaskCard } from '../components/tarefas/TaskCard'
 import { TaskFormModal } from '../components/tarefas/TaskFormModal'
 import { CenarioManagerModal } from '../components/tarefas/CenarioManagerModal'
 import { AddButton } from '../components/ui/AddButton'
+import { ColunaIcone } from '../components/tarefas/ColunaIcone'
 import { supabase } from '../lib/supabaseClient'
 import {
   CORES_COLUNA,
@@ -36,6 +37,7 @@ export function TarefasPage() {
   const [arrastada, setArrastada] = useState<Tarefa | null>(null)
   const [colunaAlvo, setColunaAlvo] = useState<string | null>(null)
   const [filtroResponsavel, setFiltroResponsavel] = useState<string | null>(null)
+  const [filtroExecutor, setFiltroExecutor] = useState<string | null>(null)
 
   const mapaPessoas = useMemo(() => new Map(pessoas.map((p) => [p.id, p])), [pessoas])
 
@@ -45,9 +47,19 @@ export function TarefasPage() {
     return pessoas.filter((pessoa) => ids.has(pessoa.id))
   }, [tarefas, pessoas])
 
+  const executores = useMemo(() => {
+    const ids = new Set(tarefas.map((t) => t.executor_id).filter(Boolean))
+    return pessoas.filter((pessoa) => ids.has(pessoa.id))
+  }, [tarefas, pessoas])
+
   const tarefasVisiveis = useMemo(
-    () => (filtroResponsavel ? tarefas.filter((t) => t.responsavel_id === filtroResponsavel) : tarefas),
-    [tarefas, filtroResponsavel],
+    () =>
+      tarefas.filter(
+        (t) =>
+          (!filtroResponsavel || t.responsavel_id === filtroResponsavel) &&
+          (!filtroExecutor || t.executor_id === filtroExecutor),
+      ),
+    [tarefas, filtroResponsavel, filtroExecutor],
   )
 
   const carregarBase = useCallback(async (selecionar?: string) => {
@@ -190,6 +202,54 @@ export function TarefasPage() {
               </div>
             )}
 
+            {executores.length > 0 && (
+              <div>
+                <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">Executor</span>
+                <div className="mt-1 flex items-center gap-1.5" role="group" aria-label="Filtrar por executor">
+                  {executores.map((pessoa) => {
+                    const ativo = filtroExecutor === pessoa.id
+                    return (
+                      <button
+                        key={pessoa.id}
+                        type="button"
+                        onClick={() => setFiltroExecutor(ativo ? null : pessoa.id)}
+                        aria-pressed={ativo}
+                        aria-label={`Mostrar apenas tarefas executadas por ${pessoa.name}`}
+                        title={ativo ? `Mostrando ${pessoa.name} — clique para limpar` : pessoa.name}
+                        className={`h-9 w-9 overflow-hidden rounded-full transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
+                          ativo
+                            ? 'ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-slate-800'
+                            : 'opacity-60 hover:opacity-100'
+                        }`}
+                      >
+                        {pessoa.avatar_url ? (
+                          <img src={pessoa.avatar_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center bg-slate-100 text-xs font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-300">
+                            {pessoa.name.trim().charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+
+                  {filtroExecutor && (
+                    <button
+                      type="button"
+                      onClick={() => setFiltroExecutor(null)}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                      aria-label="Mostrar todos os executores"
+                      title="Mostrar todos"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="cenario">
                 Cenário
@@ -199,6 +259,7 @@ export function TarefasPage() {
                 value={cenarioId}
                 onChange={(e) => {
                   setFiltroResponsavel(null)
+                  setFiltroExecutor(null)
                   setCenarioId(e.target.value)
                 }}
                 disabled={cenarios.length === 0}
@@ -292,9 +353,9 @@ export function TarefasPage() {
                   }`}
                 >
                   <header className="mb-3 flex items-center justify-between gap-2">
-                    <h3 className={`flex items-center gap-2 text-sm font-semibold ${cor.cabecalho}`}>
-                      <span className={`h-2.5 w-2.5 rounded-full ${cor.ponto}`} aria-hidden="true" />
-                      {coluna.nome}
+                    <h3 className={`flex min-w-0 items-center gap-2 text-sm font-semibold ${cor.cabecalho}`}>
+                      <ColunaIcone icone={coluna.icone} className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{coluna.nome}</span>
                     </h3>
                     <span className="rounded-full bg-white px-2 py-0.5 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                       {daColuna.length}
@@ -343,6 +404,10 @@ export function TarefasPage() {
           onClose={() => setModalTarefa(undefined)}
           onSubmit={handleSalvarTarefa}
           onDelete={handleExcluirTarefa}
+          onFinalizada={async () => {
+            setModalTarefa(undefined)
+            await carregarQuadro(cenarioId)
+          }}
         />
       )}
 
