@@ -316,11 +316,11 @@ export function TaskFormModal({
               )}
             </div>
 
-            <div className="flex items-end gap-3">
-              <span className={`${labelClass} pb-2.5`} id="rotulo-prioridade">
+            <div>
+              <span className={labelClass} id="rotulo-prioridade">
                 Prioridade
               </span>
-              <div className="flex gap-1.5" role="radiogroup" aria-labelledby="rotulo-prioridade">
+              <div className="mt-1 flex gap-1.5" role="radiogroup" aria-labelledby="rotulo-prioridade">
                 {PRIORIDADES_FORM.map((item) => {
                   const ativo = prioridade === item.valor
                   return (
