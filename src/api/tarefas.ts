@@ -175,6 +175,19 @@ export async function criarTarefa(input: TarefaInput & { ordem?: number }): Prom
   return assert(data as Tarefa | null, error)
 }
 
+/**
+ * Dispara o aviso no WhatsApp. Não interrompe o fluxo: falha de envio não
+ * pode impedir a tarefa de ser salva ou movida.
+ */
+export async function notificarTarefa(id: string, evento: 'nova' | 'status') {
+  try {
+    const { data } = await supabase.functions.invoke('notificar-tarefa', { body: { id, evento } })
+    return data as { enviado: boolean; para?: string; motivo?: string }
+  } catch {
+    return { enviado: false, motivo: 'Não foi possível avisar pelo WhatsApp.' }
+  }
+}
+
 /** Campos que só o responsável altera (o servidor repete a regra). */
 export const CAMPOS_RESTRITOS = [
   'titulo',

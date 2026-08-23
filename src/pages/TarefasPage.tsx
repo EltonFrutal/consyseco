@@ -19,6 +19,7 @@ import {
   listarTarefasDeTodos,
   listarTodasColunas,
   moverTarefa,
+  notificarTarefa,
   type Cenario,
   type Coluna,
   type Tarefa,
@@ -152,9 +153,16 @@ export function TarefasPage() {
   async function handleSalvarTarefa(input: TarefaInput, senha?: string) {
     if (modalTarefa) {
       await atualizarTarefa(modalTarefa.id, input, senha)
+      // executor novo recebe como tarefa nova; troca de etapa avisa a contraparte
+      if (input.executor_id && input.executor_id !== modalTarefa.executor_id) {
+        await notificarTarefa(modalTarefa.id, 'nova')
+      } else if (input.coluna_id !== modalTarefa.coluna_id) {
+        await notificarTarefa(modalTarefa.id, 'status')
+      }
     } else {
       const ordem = tarefas.filter((t) => t.coluna_id === input.coluna_id).length
-      await criarTarefa({ ...input, ordem })
+      const criada = await criarTarefa({ ...input, ordem })
+      if (criada?.id) await notificarTarefa(criada.id, 'nova')
     }
     setModalTarefa(undefined)
     await carregarQuadro(cenarioId)
@@ -192,6 +200,7 @@ export function TarefasPage() {
       // o trigger grava (ou zera) a data de conclusão: usar a linha que voltou
       const atualizada = await moverTarefa(tarefa.id, colunaDestino, ordem)
       setTarefas((prev) => prev.map((t) => (t.id === atualizada.id ? atualizada : t)))
+      await notificarTarefa(atualizada.id, 'status')
     } catch (err) {
       setTarefas(anterior)
       setErro(err instanceof Error ? err.message : 'Não foi possível mover a tarefa.')
