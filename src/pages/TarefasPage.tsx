@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { TaskCard } from '../components/tarefas/TaskCard'
 import { TaskFormModal } from '../components/tarefas/TaskFormModal'
@@ -29,7 +29,8 @@ import type { Profile } from '../types/profile'
 const TODOS = 'todos'
 
 export function TarefasPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
   const [cenarios, setCenarios] = useState<Cenario[]>([])
   const [cenarioId, setCenarioId] = useState('')
   const [colunas, setColunas] = useState<Coluna[]>([])
@@ -134,13 +135,10 @@ export function TarefasPage() {
     carregarQuadro(cenarioId)
   }, [cenarioId, carregarQuadro])
 
-  // o item "Cenários" do menu lateral chega por query string
+  // /tarefas/config é a rota do item Configuração: mantém o menu marcado
   useEffect(() => {
-    if (searchParams.get('config') === '1') {
-      setGerenciando(true)
-      setSearchParams({}, { replace: true })
-    }
-  }, [searchParams, setSearchParams])
+    setGerenciando(pathname === '/tarefas/config')
+  }, [pathname])
 
   const cenarioAtual = cenarios.find((c) => c.id === cenarioId) ?? null
 
@@ -378,7 +376,10 @@ export function TarefasPage() {
         cenarios={cenarios}
         cenarioAtual={cenarioAtual}
         colunas={colunas}
-        onClose={() => setGerenciando(false)}
+        onClose={() => {
+          setGerenciando(false)
+          if (pathname === '/tarefas/config') navigate('/tarefas')
+        }}
         onChanged={async (selecionado) => {
           await carregarBase(selecionado)
           if (selecionado) await carregarQuadro(selecionado)

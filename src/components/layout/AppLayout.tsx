@@ -8,8 +8,6 @@ interface NavItem {
   to: string
   label: string
   icon: ReactNode
-  /** Abre um modal em vez de navegar: nunca fica marcado como página atual. */
-  acao?: boolean
 }
 
 const iconProps = {
@@ -50,9 +48,8 @@ const itensTarefas: NavItem[] = [
     ),
   },
   {
-    to: '/tarefas?config=1',
+    to: '/tarefas/config',
     label: 'Configuração',
-    acao: true,
     icon: (
       <svg {...iconProps}>
         <circle cx="12" cy="12" r="3" />
@@ -164,7 +161,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 `flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                   collapsed ? 'justify-center px-0' : ''
                 } ${
-                  isActive && !item.acao
+                  isActive
                     ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300'
                     : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`
