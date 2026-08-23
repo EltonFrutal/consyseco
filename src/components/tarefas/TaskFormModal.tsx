@@ -43,7 +43,6 @@ export function TaskFormModal({
   const [salvando, setSalvando] = useState(false)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
-  const [pedindoSenha, setPedindoSenha] = useState(false)
   const [senha, setSenha] = useState('')
   const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
 
@@ -99,7 +98,6 @@ export function TaskFormModal({
     } catch (err) {
       if (err instanceof FinalizarError) {
         setErroFinalizar(err.message)
-        setPedindoSenha(err.senhaObrigatoria)
       } else {
         setErroFinalizar('Não foi possível finalizar a tarefa.')
       }
@@ -122,143 +120,150 @@ export function TaskFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-6">
-      <div className="max-h-full w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      {/* largura maior + duas colunas: cabe inteiro na tela, sem rolagem */}
+      <div className="max-h-[95vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
           {editando ? 'Editar tarefa' : 'Nova tarefa'}
         </h3>
 
-        <form onSubmit={handleSubmit} noValidate className="mt-4 space-y-4">
-          <div>
-            <label className={labelClass} htmlFor="tarefa-titulo">
-              Título
-            </label>
-            <input
-              id="tarefa-titulo"
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              className={inputClass}
-              autoFocus
-            />
-          </div>
+        <form onSubmit={handleSubmit} noValidate className="mt-3 space-y-3">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              <div>
+                <label className={labelClass} htmlFor="tarefa-titulo">
+                  Título
+                </label>
+                <input
+                  id="tarefa-titulo"
+                  type="text"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  className={inputClass}
+                  autoFocus
+                />
+              </div>
 
-          <div>
-            <label className={labelClass} htmlFor="tarefa-descricao">
-              Descrição
-            </label>
-            <textarea
-              id="tarefa-descricao"
-              rows={3}
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={labelClass} htmlFor="tarefa-solicitante">
-                Solicitante
-              </label>
-              <select
-                id="tarefa-solicitante"
-                value={solicitanteId}
-                onChange={(e) => setSolicitanteId(e.target.value)}
-                className={inputClass}
-              >
-                <option value="">Ninguém</option>
-                {pessoas.map((pessoa) => (
-                  <option key={pessoa.id} value={pessoa.id}>
-                    {pessoa.name}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label className={labelClass} htmlFor="tarefa-descricao">
+                  Descrição
+                </label>
+                <textarea
+                  id="tarefa-descricao"
+                  rows={7}
+                  value={descricao}
+                  onChange={(e) => setDescricao(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
             </div>
 
-            <div>
-              <label className={labelClass} htmlFor="tarefa-responsavel">
-                Responsável
-              </label>
-              <select
-                id="tarefa-responsavel"
-                value={responsavelId}
-                onChange={(e) => setResponsavelId(e.target.value)}
-                className={inputClass}
-              >
-                <option value="">Ninguém</option>
-                {pessoas.map((pessoa) => (
-                  <option key={pessoa.id} value={pessoa.id}>
-                    {pessoa.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="space-y-3">
+              <div>
+                <label className={labelClass} htmlFor="tarefa-solicitante">
+                  Solicitante
+                </label>
+                <select
+                  id="tarefa-solicitante"
+                  value={solicitanteId}
+                  onChange={(e) => setSolicitanteId(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Ninguém</option>
+                  {pessoas.map((pessoa) => (
+                    <option key={pessoa.id} value={pessoa.id}>
+                      {pessoa.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className={labelClass} htmlFor="tarefa-executor">
-                Executor
-              </label>
-              <select
-                id="tarefa-executor"
-                value={executorId}
-                onChange={(e) => setExecutorId(e.target.value)}
-                className={inputClass}
-              >
-                <option value="">Ninguém</option>
-                {pessoas.map((pessoa) => (
-                  <option key={pessoa.id} value={pessoa.id}>
-                    {pessoa.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <label className={labelClass} htmlFor="tarefa-responsavel">
+                  Responsável
+                </label>
+                <select
+                  id="tarefa-responsavel"
+                  value={responsavelId}
+                  onChange={(e) => setResponsavelId(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Ninguém</option>
+                  {pessoas.map((pessoa) => (
+                    <option key={pessoa.id} value={pessoa.id}>
+                      {pessoa.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className={labelClass} htmlFor="tarefa-prazo">
-                Prazo
-              </label>
-              <input
-                id="tarefa-prazo"
-                type="date"
-                value={prazo}
-                onChange={(e) => setPrazo(e.target.value)}
-                className={inputClass}
-              />
-            </div>
+              <div>
+                <label className={labelClass} htmlFor="tarefa-executor">
+                  Executor
+                </label>
+                <select
+                  id="tarefa-executor"
+                  value={executorId}
+                  onChange={(e) => setExecutorId(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="">Ninguém</option>
+                  {pessoas.map((pessoa) => (
+                    <option key={pessoa.id} value={pessoa.id}>
+                      {pessoa.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className={labelClass} htmlFor="tarefa-prioridade">
-                Prioridade
-              </label>
-              <select
-                id="tarefa-prioridade"
-                value={prioridade}
-                onChange={(e) => setPrioridade(e.target.value as Prioridade)}
-                className={inputClass}
-              >
-                <option value="baixa">Baixa</option>
-                <option value="media">Média</option>
-                <option value="alta">Alta</option>
-              </select>
-            </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className={labelClass} htmlFor="tarefa-prazo">
+                    Prazo
+                  </label>
+                  <input
+                    id="tarefa-prazo"
+                    type="date"
+                    value={prazo}
+                    onChange={(e) => setPrazo(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
 
-            <div className="sm:col-span-2">
-              <label className={labelClass} htmlFor="tarefa-coluna">
-                Coluna
-              </label>
-              <select
-                id="tarefa-coluna"
-                value={colunaId}
-                onChange={(e) => setColunaId(e.target.value)}
-                className={inputClass}
-              >
-                {colunas.map((coluna) => (
-                  <option key={coluna.id} value={coluna.id}>
-                    {coluna.nome}
-                  </option>
-                ))}
-              </select>
+                <div>
+                  <label className={labelClass} htmlFor="tarefa-prioridade">
+                    Prioridade
+                  </label>
+                  <select
+                    id="tarefa-prioridade"
+                    value={prioridade}
+                    onChange={(e) => setPrioridade(e.target.value as Prioridade)}
+                    className={inputClass}
+                  >
+                    <option value="baixa">Baixa</option>
+                    <option value="media">Média</option>
+                    <option value="alta">Alta</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className={labelClass} htmlFor="tarefa-coluna">
+                    Etapa
+                  </label>
+                  <select
+                    id="tarefa-coluna"
+                    value={colunaId}
+                    onChange={(e) => setColunaId(e.target.value)}
+                    className={inputClass}
+                  >
+                    {colunas.map((coluna) => (
+                      <option key={coluna.id} value={coluna.id}>
+                        {coluna.nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -269,18 +274,15 @@ export function TaskFormModal({
           )}
 
           {podeFinalizar && (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/30 dark:bg-emerald-500/10">
-              <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                Finalizar tarefa
-              </p>
-              <p className="mt-1 text-xs text-emerald-700 dark:text-emerald-400">
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+              <span className="text-xs text-emerald-800 dark:text-emerald-300">
                 {souOResponsavel
-                  ? 'Você é o responsável: pode finalizar direto. A tarefa sai do quadro.'
-                  : `Só ${nomeResponsavel ?? 'o responsável'} pode finalizar — informe a senha dele.`}
-              </p>
+                  ? 'Você é o responsável e pode finalizar — a tarefa sai do quadro.'
+                  : `Só ${nomeResponsavel ?? 'o responsável'} finaliza: informe a senha dele.`}
+              </span>
 
               {!souOResponsavel && (
-                <div className="mt-2">
+                <>
                   <label className="sr-only" htmlFor="tarefa-senha-responsavel">
                     Senha do responsável
                   </label>
@@ -291,56 +293,54 @@ export function TaskFormModal({
                     onChange={(e) => setSenha(e.target.value)}
                     autoComplete="off"
                     placeholder="Senha do responsável"
-                    className="block w-full rounded-lg border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-48 rounded-lg border border-emerald-300 px-2.5 py-1.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:border-emerald-500/40 dark:bg-slate-800 dark:text-slate-100"
                   />
-                </div>
-              )}
-
-              {erroFinalizar && (
-                <p role="alert" className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
-                  {erroFinalizar}
-                </p>
+                </>
               )}
 
               <button
                 type="button"
                 onClick={handleFinalizar}
-                disabled={finalizando || (!souOResponsavel && pedindoSenha && !senha)}
-                className="mt-3 min-h-11 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-slate-800"
+                disabled={finalizando || (!souOResponsavel && !senha)}
+                className="ml-auto rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
               >
-                {finalizando ? 'Finalizando...' : 'Finalizar tarefa'}
+                {finalizando ? 'Finalizando...' : 'Finalizar'}
               </button>
+
+              {erroFinalizar && (
+                <p role="alert" className="w-full text-xs font-medium text-red-600 dark:text-red-400">
+                  {erroFinalizar}
+                </p>
+              )}
             </div>
           )}
 
           {confirmandoExclusao && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
-              <p>Excluir esta tarefa? A ação não pode ser desfeita.</p>
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="min-h-11 rounded-lg bg-red-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-red-500"
-                >
-                  Sim, excluir
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmandoExclusao(false)}
-                  className="min-h-11 rounded-lg border border-red-300 px-3 py-2 text-xs font-medium transition hover:bg-red-100 dark:border-red-500/40 dark:hover:bg-red-500/10"
-                >
-                  Manter
-                </button>
-              </div>
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-2.5 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+              <span className="text-xs">Excluir esta tarefa? A ação não pode ser desfeita.</span>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="ml-auto rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-500"
+              >
+                Sim, excluir
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmandoExclusao(false)}
+                className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium transition hover:bg-red-100 dark:border-red-500/40 dark:hover:bg-red-500/10"
+              >
+                Manter
+              </button>
             </div>
           )}
 
-          <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-between">
+          <div className="flex items-center justify-between gap-3 pt-1">
             {editando ? (
               <button
                 type="button"
                 onClick={() => setConfirmandoExclusao(true)}
-                className="min-h-11 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-500/10"
+                className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-500/10"
               >
                 Excluir
               </button>
@@ -348,18 +348,18 @@ export function TaskFormModal({
               <span />
             )}
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={salvando}
-                className="min-h-11 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-slate-900"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-slate-800"
               >
                 {salvando ? 'Salvando...' : 'Salvar'}
               </button>
@@ -367,7 +367,7 @@ export function TaskFormModal({
           </div>
 
           {tarefa && (
-            <p className="border-t border-slate-100 pt-3 text-[11px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+            <p className="border-t border-slate-100 pt-2 text-[11px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
               Criada em {new Date(tarefa.created_at).toLocaleString('pt-BR')}
               {' · '}
               Alterada em {new Date(tarefa.updated_at).toLocaleString('pt-BR')}
