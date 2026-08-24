@@ -1,14 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { ThemeToggle } from './ThemeToggle'
 import { SidebarFooter } from './SidebarFooter'
-
-interface NavItem {
-  to: string
-  label: string
-  icon: ReactNode
-}
+import { BottomNav, type NavItem } from './BottomNav'
 
 const iconProps = {
   className: 'h-5 w-5 shrink-0',
@@ -100,7 +96,9 @@ const itensTarefas: NavItem[] = [
   },
 ]
 
-const STORAGE_KEY = 'sidebar-collapsed'
+// chave nova de propósito: o padrão recolhido precisa valer também para quem
+// já tinha uma preferência salva na chave antiga
+const STORAGE_KEY = 'sidebar-collapsed-v2'
 
 /**
  * O menu depende do aplicativo aberto: na tela de início não há itens, e
@@ -123,9 +121,10 @@ function menuDaRota(pathname: string): NavItem[] {
 export function AppLayout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
   const { pathname } = useLocation()
+  const mobile = useIsMobile()
   const navItems = menuDaRota(pathname)
   const titulo = tituloDaRota(pathname)
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEY) === 'true')
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(STORAGE_KEY) !== 'false')
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, String(collapsed))
@@ -134,7 +133,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900">
       <aside
-        className={`sticky top-0 flex h-screen shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white transition-[width] duration-200 dark:border-slate-700 dark:bg-slate-800 ${
+        className={`sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white transition-[width] duration-200 md:flex dark:border-slate-700 dark:bg-slate-800 ${
           collapsed ? 'w-16' : 'w-60'
         }`}
       >
@@ -221,6 +220,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">{children}</main>
+        {mobile && navItems.length > 0 && <BottomNav itens={navItems} />}
       </div>
     </div>
   )
