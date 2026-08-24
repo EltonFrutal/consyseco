@@ -34,8 +34,17 @@ const itemInicio: NavItem =
   ),
 }
 
-/** Itens do aplicativo Tarefas. O Painel Gerencial não entra: é outro app. */
+/** Itens do aplicativo Tarefas — o painel é uma tela dele, não outro app. */
 const itensTarefas: NavItem[] = [
+  {
+    to: '/dashboard',
+    label: 'Painel',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+      </svg>
+    ),
+  },
   {
     to: '/tarefas',
     label: 'Tarefas',
@@ -100,14 +109,13 @@ const STORAGE_KEY = 'sidebar-collapsed'
 /** O título da barra acompanha o aplicativo aberto. */
 function tituloDaRota(pathname: string): string {
   if (pathname.startsWith('/inicio')) return 'Início'
-  if (pathname.startsWith('/dashboard')) return 'Painel Gerencial'
   return 'Tarefas'
 }
 
 function menuDaRota(pathname: string): NavItem[] {
   if (pathname.startsWith('/inicio')) return []
   // usuários e integração pertencem ao app Tarefas, apesar da rota própria
-  const doApp = ['/tarefas', '/usuarios', '/integracoes']
+  const doApp = ['/tarefas', '/dashboard', '/usuarios', '/integracoes']
   if (doApp.some((rota) => pathname.startsWith(rota))) return [itemInicio, ...itensTarefas]
   return [itemInicio]
 }
@@ -212,7 +220,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </button>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">{children}</main>
       </div>
     </div>
   )

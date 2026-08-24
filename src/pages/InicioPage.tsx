@@ -21,6 +21,7 @@ const iconeProps = {
   'aria-hidden': true,
 }
 
+// O painel de indicadores não entra aqui: é uma tela do app Tarefas.
 const aplicativos: Aplicativo[] = [
   {
     nome: 'Tarefas',
@@ -32,17 +33,6 @@ const aplicativos: Aplicativo[] = [
         <rect x="3" y="4" width="18" height="17" rx="2" />
         <path d="M3 9h18" />
         <path d="M8 13h3M8 17h3M14 13h3M14 17h3" />
-      </svg>
-    ),
-  },
-  {
-    nome: 'Painel Gerencial',
-    descricao: 'Indicadores das tarefas: etapas, responsáveis, prazos e prioridades.',
-    to: '/dashboard',
-    cor: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
-    icone: (
-      <svg {...iconeProps}>
-        <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
       </svg>
     ),
   },

@@ -8,11 +8,11 @@ Padrões de UI e de banco detalhados vivem em [`docs/padroes.md`](docs/padroes.m
 ## 1. Visão geral do projeto
 
 - **O que é:** **Consyseco** — plataforma interna que hospeda vários aplicativos. O repositório fica em `C:\Projetos\consyseco` e o pacote se chama `consyseco`.
-- **Consyseco é o ecossistema, não um app.** "Tarefas" é apenas o primeiro aplicativo; "Painel Gerencial" é o segundo e "Pesquisa" ainda não existe. O nome **Consyseco** só aparece na casca (título da aba, favicon, tela de login); dentro de um app, o título da barra lateral é o nome **do app**. Ao criar um aplicativo novo, ele entra como cartão em `InicioPage` e ganha seu próprio grupo de itens em `menuDaRota`/`itensDoApp` (`AppLayout.tsx`) — não pendurar tela nova no menu de Tarefas.
+- **Consyseco é o ecossistema, não um app.** "Tarefas" é apenas o primeiro aplicativo; "Painel Gerencial" é o segundo e "Pesquisa" ainda não existe. O nome **Consyseco** só aparece na casca (título da aba, favicon, tela de login); dentro de um app, o título da barra lateral é o nome **do app**. Ao criar um aplicativo novo, ele entra como cartão em `InicioPage` e ganha seu próprio grupo de itens em `menuDaRota`/`itensTarefas` (`AppLayout.tsx`) — não pendurar tela nova no menu de Tarefas.
 - **Para quem:** uso interno; o acesso é fechado e todo usuário é criado por um administrador.
-- **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi** e o **kanban de tarefas** (cenários → colunas → tarefas). O dashboard ainda é um esqueleto.
+- **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi**, o **kanban de tarefas** (cenários → colunas → tarefas) e o **painel de indicadores** do app Tarefas.
 - **Modelo de acesso:** só existe o papel `admin` (`profiles.role` tem check `role in ('admin')`). Usuário desativado é banido no Auth **e** marcado como `disabled` no perfil.
-- **Navegação:** depois do login o usuário cai em `/inicio`, uma tela de seleção de aplicativo (Tarefas, Painel Gerencial e Pesquisa — esta última ainda não existe).
+- **Navegação:** depois do login o usuário cai em `/inicio`, uma tela de seleção de aplicativo (Tarefas e Pesquisa — esta última ainda não existe). O **Painel** (`/dashboard`) é uma tela *dentro* do app Tarefas, não um app do início.
 - **Idioma:** toda a interface e as mensagens de erro são em **português do Brasil**.
 
 ## 2. Stack e versões
@@ -229,6 +229,7 @@ Formato:
 - **A coluna de conclusão é marcada com `colunas.is_conclusao`**, não pelo nome — cada cenário pode chamar a etapa final do que quiser.
 - **Ícone da coluna guardado como token** (`lista`, `play`, `relogio`, `check`...), traduzido em `ColunaIcone`; mesmo motivo da cor: classe/SVG montado por string some no purge.
 - **Colunas sensíveis de `tarefas` fora do alcance do cliente**: `finalizada_em`, `finalizada_por` e `data_conclusao` não têm grant de escrita para `authenticated` — só a edge function e os triggers escrevem.
+- **O painel (`/dashboard`) não rola — nem na vertical, nem na horizontal.** É requisito do usuário: o conteúdo se ajusta à altura da janela. Por isso o `<main>` do `AppLayout` é `flex flex-col min-h-0` e a página usa `flex-1 min-h-0` em cascata; as barras do gráfico têm altura em **porcentagem** (divs, não SVG), que acompanha o cartão sem escalar tipografia. Ao mexer ali, conferir `scrollHeight === clientHeight` — não confiar no olho.
 - **Tailwind 4 sem arquivo de config** — não recriar `tailwind.config.js` "para padronizar".
 - **Sem biblioteca de formulário/estado** — o projeto é pequeno; introduzir uma exige justificativa e aprovação.
 
