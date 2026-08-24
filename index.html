@@ -4,8 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#dc2626" />
+    <meta name="theme-color" content="#0f172a" />
     <title>Consyseco</title>
+    <script>
+      // Tema aplicado antes da primeira pintura: sem isso a tela pisca branca
+      // e a de login nem recebe tema, porque o ThemeToggle vive no AppLayout.
+      // Padrão é escuro; só quem escolheu "claro" fica claro.
+      try {
+        document.documentElement.classList.toggle(
+          'dark',
+          localStorage.getItem('theme-v2') !== 'light',
+        )
+      } catch (e) {
+        document.documentElement.classList.add('dark')
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

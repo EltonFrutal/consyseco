@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 
+// chave nova de propósito: a versão anterior gravava a preferência do sistema
+// em 'theme' assim que a tela abria, e isso anularia o padrão escuro
+const CHAVE = 'theme-v2'
+
+/** Escuro é o padrão do produto — o script do index.html já aplicou a classe. */
 function getInitialTheme(): 'light' | 'dark' {
-  const stored = localStorage.getItem('theme')
-  if (stored === 'light' || stored === 'dark') return stored
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  return localStorage.getItem(CHAVE) === 'light' ? 'light' : 'dark'
 }
 
 export function ThemeToggle() {
@@ -11,7 +14,7 @@ export function ThemeToggle() {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('theme', theme)
+    localStorage.setItem(CHAVE, theme)
   }, [theme])
 
   const isDark = theme === 'dark'
