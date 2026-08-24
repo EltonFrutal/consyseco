@@ -351,7 +351,7 @@ export function DashboardPage() {
 
   return (
     <AppLayout>
-      <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden">
+      <div className="flex flex-col gap-4 md:min-h-0 md:flex-1 md:gap-6 md:overflow-hidden">
         <header className="flex shrink-0 flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-lg font-semibold text-slate-900 dark:text-white">Painel</h1>
@@ -405,15 +405,15 @@ export function DashboardPage() {
 
         {!carregando && !erro && doCenario.length > 0 && (
           <>
-            <div className="grid shrink-0 gap-6 sm:grid-cols-3">
+            <div className="grid shrink-0 gap-4 sm:grid-cols-3 md:gap-6">
               <Stat rotulo="Tarefas" valor={total} detalhe="em aberto, sem as finalizadas" />
               <Stat rotulo="Vencidas" valor={vencidas} detalhe="prazo já passou" destaque />
               <Stat rotulo="Prioridade alta" valor={altaPrioridade} detalhe="exigem atenção" />
             </div>
 
-            <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-3">
-              <div className="flex min-h-0 flex-col gap-6">
-                <section className={`${cartaoClass} flex-1`}>
+            <div className="grid gap-4 md:min-h-0 md:flex-1 md:gap-6 lg:grid-cols-3">
+              <div className="flex min-w-0 flex-col gap-4 md:min-h-0 md:gap-6">
+                <section className={`${cartaoClass} md:flex-1`}>
                   <h2 className="shrink-0 text-sm font-semibold text-slate-900 dark:text-white">
                     Por etapa
                   </h2>
@@ -430,7 +430,7 @@ export function DashboardPage() {
                   </ul>
                 </section>
 
-                <section className={`${cartaoClass} flex-1`}>
+                <section className={`${cartaoClass} md:flex-1`}>
                   <h2 className="shrink-0 text-sm font-semibold text-slate-900 dark:text-white">
                     Por prioridade
                   </h2>
@@ -448,7 +448,7 @@ export function DashboardPage() {
                 </section>
               </div>
 
-              <section className={`${cartaoClass} lg:col-span-2`}>
+              <section className={`${cartaoClass} h-72 min-w-0 md:h-auto lg:col-span-2`}>
                 <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
                   <div>
                     <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
@@ -459,7 +459,7 @@ export function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {SERIES.map((serie) => {
                       const visivel = series[serie.chave]
                       return (

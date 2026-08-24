@@ -209,6 +209,20 @@ Formato:
 - **Prevenção:** para doc em SPA, achar a spec pela aba de rede em vez de adivinhar URLs; um 200 em SPA não prova que o arquivo existe.
 - **Arquivos:** —
 
+### [2026-08-24] Cartão largo demais escondido pelo `overflow` do layout
+- **Sintoma:** no painel em 375px os números das barras ficavam fora da tela; parecia "design apertado". Não havia barra de rolagem horizontal para denunciar.
+- **Causa raiz:** a fila de controles do gráfico (legenda + selects + setas) não quebrava linha, então o conteúdo mais largo esticava o cartão para 565px numa tela de 375px. O estouro era recortado por um `overflow` mais acima, o que escondeu o problema.
+- **Solução:** `flex-wrap` na fila de controles e `min-w-0` nos itens da grade.
+- **Prevenção:** conferir largura medindo (`getBoundingClientRect().right` contra `innerWidth`), não pelo olho — item de grade tem `min-width: auto` e estica com o conteúdo, e `overflow` esconde a evidência.
+- **Arquivos:** `src/pages/DashboardPage.tsx`.
+
+### [2026-08-24] Seletor de etapa mentia no modo "Todos os cenários"
+- **Sintoma:** com "Todos os cenários" selecionado, todo cartão mostrava a primeira etapa ("A fazer") no seletor, mesmo estando em outra.
+- **Causa raiz:** nesse modo a lista de colunas é deduplicada por nome (uma representante por etapa). O `coluna_id` da tarefa de outro cenário não existe nessa lista, e um `<select>` sem `option` correspondente cai na primeira.
+- **Solução:** passar explicitamente qual opção exibir (`colunaSelecionadaId`), em vez de confiar no `coluna_id` da tarefa.
+- **Prevenção:** `select` com `value` que pode não estar entre as `options` não avisa — nem erro, nem tipo. Conferir sempre que a lista de opções for derivada/filtrada.
+- **Arquivos:** `src/components/tarefas/TaskCard.tsx`, `src/pages/TarefasPage.tsx`.
+
 ### Decisões arquiteturais
 
 - **Escrita privilegiada isolada na edge function `admin-users`.** O frontend nunca vê a `service_role`; a função valida o chamador antes de qualquer operação. Não mover essas operações para o cliente.
@@ -230,6 +244,12 @@ Formato:
 - **Ícone da coluna guardado como token** (`lista`, `play`, `relogio`, `check`...), traduzido em `ColunaIcone`; mesmo motivo da cor: classe/SVG montado por string some no purge.
 - **Colunas sensíveis de `tarefas` fora do alcance do cliente**: `finalizada_em`, `finalizada_por` e `data_conclusao` não têm grant de escrita para `authenticated` — só a edge function e os triggers escrevem.
 - **O painel (`/dashboard`) não rola — nem na vertical, nem na horizontal.** É requisito do usuário: o conteúdo se ajusta à altura da janela. Por isso o `<main>` do `AppLayout` é `flex flex-col min-h-0` e a página usa `flex-1 min-h-0` em cascata; as barras do gráfico têm altura em **porcentagem** (divs, não SVG), que acompanha o cartão sem escalar tipografia. Ao mexer ali, conferir `scrollHeight === clientHeight` — não confiar no olho.
+- **Mobile e desktop são decididos pela largura, não pelo aparelho** (`useIsMobile`, `matchMedia('(max-width: 767px)')` — o mesmo corte do `md:`). User agent mente, tablet gira e notebook tem tela de toque; largura descreve o que importa, que é o espaço disponível. O hook é para mudança de **estrutura** (menu inferior, quadro em uma etapa por vez); diferença só de estilo continua sendo variante `md:` no CSS.
+- **No mobile a navegação fica no rodapé** (`BottomNav`), com no máximo 5 alvos: quatro telas e "Mais" para o resto. A barra lateral é `hidden md:flex`. O rodapé reserva `env(safe-area-inset-bottom)` por causa da barra de gestos do iPhone.
+- **Arrastar e soltar não funciona em tela de toque.** O quadro usa a API nativa de drag do HTML, que só responde a mouse. No mobile a etapa muda pelo `<select>` dentro do cartão — se esse seletor sumir, a tarefa fica presa.
+- **Tema escuro é o padrão**, aplicado por script no `index.html` antes da primeira pintura (sem ele a tela pisca branca e o login, que vive fora do `AppLayout`, não recebe tema nenhum).
+- **Padrão novo que precisa valer para quem já usou o app exige chave nova no `localStorage`** (`theme-v2`, `sidebar-collapsed-v2`). As versões anteriores gravavam a preferência logo na primeira renderização, então todo usuário tem valor explícito salvo e o padrão novo seria ignorado.
+- **O painel rola no mobile e não rola no desktop.** A regra de caber na tela vale onde há tela; no celular ela espremia os cartões a ponto de cortar conteúdo.
 - **Tailwind 4 sem arquivo de config** — não recriar `tailwind.config.js` "para padronizar".
 - **Sem biblioteca de formulário/estado** — o projeto é pequeno; introduzir uma exige justificativa e aprovação.
 
