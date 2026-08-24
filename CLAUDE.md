@@ -7,7 +7,8 @@ Padrões de UI e de banco detalhados vivem em [`docs/padroes.md`](docs/padroes.m
 
 ## 1. Visão geral do projeto
 
-- **O que é:** aplicação web de gestão de tarefas (nome do pacote: `tarefas`), em estágio inicial.
+- **O que é:** **Consyseco** — plataforma interna que hospeda vários aplicativos. O repositório fica em `C:\Projetos\consyseco` e o pacote se chama `consyseco`.
+- **Consyseco é o ecossistema, não um app.** "Tarefas" é apenas o primeiro aplicativo; "Painel Gerencial" é o segundo e "Pesquisa" ainda não existe. O nome **Consyseco** só aparece na casca (título da aba, favicon, tela de login); dentro de um app, o título da barra lateral é o nome **do app**. Ao criar um aplicativo novo, ele entra como cartão em `InicioPage` e ganha seu próprio grupo de itens em `menuDaRota`/`itensDoApp` (`AppLayout.tsx`) — não pendurar tela nova no menu de Tarefas.
 - **Para quem:** uso interno; o acesso é fechado e todo usuário é criado por um administrador.
 - **Domínio hoje:** autenticação, setup do primeiro admin, **gestão de usuários** (criar, editar, foto, telefone, DDI, ativar/desativar), **integração WhatsApp via uazapi** e o **kanban de tarefas** (cenários → colunas → tarefas). O dashboard ainda é um esqueleto.
 - **Modelo de acesso:** só existe o papel `admin` (`profiles.role` tem check `role in ('admin')`). Usuário desativado é banido no Auth **e** marcado como `disabled` no perfil.
@@ -45,13 +46,13 @@ npm run preview      # servir o build
 
 ```
 src/
-  api/            # chamadas ao backend (adminUsers.ts, whatsapp.ts → edge functions; avatars.ts → storage)
+  api/            # chamadas ao backend (adminUsers.ts, whatsapp.ts, tarefas.ts → edge functions; avatars.ts → storage)
   components/
     auth/         # LoginForm, SetupForm
-    layout/       # AppLayout (sidebar + header), ThemeToggle
-    ui/           # componentes genéricos (ConfirmDialog)
+    layout/       # AppLayout (sidebar + header), SidebarFooter, ThemeToggle
+    ui/           # genéricos (ConfirmDialog, AddButton, ActionButtons)
     users/        # UsersTable, UserFormModal
-    tarefas/      # TaskCard, TaskFormModal, CenarioManagerModal, ColunaIcone
+    tarefas/      # TaskCard, TaskFormModal, CenarioManagerModal, ColunaIcone, FiltroPessoas, SenhaResponsavelDialog
     whatsapp/     # InstanceForm, QrConnect, ConnectedCard, DeleteInstanceDialog
   contexts/       # AuthContext (sessão + profile do usuário logado)
   hooks/          # useHasAdminUser
@@ -60,7 +61,7 @@ src/
   routes/         # ProtectedRoute
   types/          # profile.ts (à mão) e database.ts (gerado pelo Supabase)
 supabase/
-  migrations/     # 0001_init … 0007_tarefas_kanban, 0008_tarefas_finalizacao
+  migrations/     # 0001_init … 0009_tarefas_numero, 0010_tarefas_edicao_restrita
   functions/
     admin-users/  # operações privilegiadas de usuário: create, update, set-status
     wa-instance-create|qr|status|delete/  # integração uazapi (uma função por operação)
@@ -70,7 +71,10 @@ supabase/
     salvar-tarefa/    # edição com regra de dono (campos restritos ao responsável)
     notificar-tarefa/ # aviso no WhatsApp ao atribuir ou mudar a etapa
 docs/padroes.md   # padrões de UI e de auditoria
+docs/superpowers/ # specs e planos de trabalho (não é código da aplicação)
 ```
+
+**Rotas** (`src/App.tsx`, todas dentro de `ProtectedRoute` menos `/login`): `/inicio`, `/dashboard`, `/tarefas`, `/tarefas/config` (mesma `TarefasPage`, com o modal de cenários aberto), `/tarefas/finalizadas`, `/usuarios`, `/integracoes/whatsapp`. Qualquer outra rota redireciona para `/inicio`.
 
 **Fluxo de dados:**
 - Leitura → `supabase.from(...)` direto do cliente, protegido por RLS.
@@ -104,6 +108,7 @@ docs/padroes.md   # padrões de UI e de auditoria
 
 ## 7. Supabase — banco, RLS e migrations
 
+- **Projeto:** `consyseco` (ref `ngppuvyeejjyoxhfjpym`, região `us-east-2`, Postgres 17) — é o **único** projeto da organização; não existe ambiente de staging separado, então tudo que roda aqui bate no banco que o time usa.
 - Toda mudança de schema vira **migration versionada** em `supabase/migrations/` (`NNNN_descricao.sql`, sequencial). Alteração feita à mão pelo dashboard é proibida: o estado do banco tem que ser reproduzível a partir do repositório.
 - Migration idempotente sempre que possível (`if not exists`, `create or replace`, `drop policy if exists` antes do `create policy`) e **acompanhada das policies de RLS da tabela criada, no mesmo arquivo**.
 - Após alterar o schema, **atualizar os tipos TypeScript**. Hoje os tipos são escritos à mão em `src/types/`; ao gerar com `npx supabase gen types typescript`, commitar o arquivo gerado. Tipo desatualizado é bug silencioso — o cast `as Profile` esconde a divergência até o runtime.
