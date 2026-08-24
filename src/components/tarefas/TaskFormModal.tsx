@@ -28,11 +28,12 @@ interface TaskFormModalProps {
   onFinalizada: () => Promise<void>
 }
 
+// text-base no mobile é obrigatório: abaixo de 16px o iOS dá zoom sozinho ao focar
 const inputClass =
-  'mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
-const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300'
+  'mt-1 block min-h-10 w-full rounded-lg border border-slate-300 px-3 py-1.5 text-base shadow-sm md:py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 md:min-h-0 md:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
+const labelClass = 'block text-xs font-medium text-slate-700 md:text-sm dark:text-slate-300'
 const inputErroClass =
-  'mt-1 block w-full rounded-lg border border-red-500 px-3 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-slate-800 dark:text-slate-100'
+  'mt-1 block min-h-10 w-full rounded-lg border border-red-500 px-3 py-1.5 text-base shadow-sm md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 md:min-h-0 md:text-sm dark:bg-slate-800 dark:text-slate-100'
 const erroCampoClass = 'mt-1 text-xs text-red-600 dark:text-red-400'
 
 const PRIORIDADES_FORM = [
@@ -204,11 +205,11 @@ export function TaskFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 md:p-4">
       {/* largura maior + duas colunas: cabe inteiro na tela, sem rolagem */}
-      <div className="max-h-[95vh] w-full max-w-3xl overflow-hidden rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-white p-3 shadow-xl md:h-auto md:p-5 md:max-h-[95vh] md:max-w-3xl md:rounded-2xl md:p-5 dark:bg-slate-800">
         <div className="flex items-baseline gap-2">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h3 className="text-base font-semibold text-slate-900 md:text-lg dark:text-white">
             {editando ? 'Editar tarefa' : 'Nova tarefa'}
           </h3>
           {tarefa && (
@@ -221,9 +222,10 @@ export function TaskFormModal({
           )}
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="mt-3 space-y-3">
+        <form onSubmit={handleSubmit} noValidate className="mt-3 flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto md:space-y-3">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-3">
+            <div className="space-y-4 md:space-y-3">
               <div>
                 <label className={labelClass} htmlFor="tarefa-titulo">
                   Título
@@ -252,7 +254,7 @@ export function TaskFormModal({
                 </label>
                 <textarea
                   id="tarefa-descricao"
-                  rows={4}
+                  rows={2}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   className={campos.descricao ? inputErroClass : inputClass}
@@ -267,7 +269,7 @@ export function TaskFormModal({
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4 md:space-y-3">
               <div>
                 <label className={labelClass} htmlFor="tarefa-solicitante">
                   Solicitante
@@ -352,7 +354,7 @@ export function TaskFormModal({
           </div>
 
           {/* cenário, prazo, etapa e prioridade dividem as linhas de baixo */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:gap-4 lg:grid-cols-4">
             <div>
               <label className={labelClass} htmlFor="tarefa-cenario">
                 Cenário
@@ -481,7 +483,10 @@ export function TaskFormModal({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-3 pt-4">
+          </div>
+
+          <div className="shrink-0 border-t border-slate-200 pt-3 md:border-0 md:pt-0 dark:border-slate-700">
+          <div className="flex flex-wrap items-center gap-3 md:pt-4">
             {editando ? (
               <DeleteButton onClick={() => setConfirmandoExclusao(true)} label="Excluir tarefa" />
             ) : (
@@ -521,7 +526,7 @@ export function TaskFormModal({
           </div>
 
           {tarefa && (
-            <p className="border-t border-slate-100 pt-2 text-[11px] text-slate-400 dark:border-slate-700 dark:text-slate-500">
+            <p className="hidden border-t border-slate-100 pt-2 text-[11px] text-slate-400 md:block dark:border-slate-700 dark:text-slate-500">
               Criada em {new Date(tarefa.created_at).toLocaleString('pt-BR')}
               {' · '}
               Alterada em {new Date(tarefa.updated_at).toLocaleString('pt-BR')}
@@ -532,6 +537,7 @@ export function TaskFormModal({
               )}
             </p>
           )}
+          </div>
         </form>
       </div>
 

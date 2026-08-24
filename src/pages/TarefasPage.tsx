@@ -7,6 +7,7 @@ import { CenarioManagerModal } from '../components/tarefas/CenarioManagerModal'
 import { AddButton } from '../components/ui/AddButton'
 import { ColunaIcone } from '../components/tarefas/ColunaIcone'
 import { FiltroPessoas, type DimensaoFiltro } from '../components/tarefas/FiltroPessoas'
+import { useIsMobile } from '../hooks/useIsMobile'
 import { supabase } from '../lib/supabaseClient'
 import {
   CORES_COLUNA,
@@ -28,6 +29,9 @@ import {
 import type { Profile } from '../types/profile'
 
 const TODOS = 'todos'
+
+const seletorMobileClass =
+  'block min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
 
 export function TarefasPage() {
   const { pathname } = useLocation()
@@ -63,6 +67,9 @@ export function TarefasPage() {
   }, [tarefas, pessoas])
 
   const pessoasDoFiltro = dimensaoFiltro === 'responsavel' ? responsaveis : executores
+
+  const mobile = useIsMobile()
+  const [etapaAtiva, setEtapaAtiva] = useState<string | null>(null)
 
   const tarefasVisiveis = useMemo(() => {
     if (!filtroPessoa) return tarefas
@@ -144,11 +151,29 @@ export function TarefasPage() {
   }, [pathname])
 
   const cenarioAtual = cenarios.find((c) => c.id === cenarioId) ?? null
+  const colunaAtiva = colunas.find((c) => c.id === etapaAtiva) ?? null
 
   /** Nome (minúsculo) da coluna de uma tarefa — usado no modo "Todos". */
   function nomeDaColuna(colunaId: string): string {
     return (todasColunas.find((c) => c.id === colunaId)?.nome ?? '').toLowerCase()
   }
+
+  /** As tarefas de uma etapa. No modo "Todos" as colunas de mesmo nome somam. */
+  function tarefasDaColuna(coluna: Coluna): Tarefa[] {
+    return tarefasVisiveis.filter((t) =>
+      cenarioId === TODOS
+        ? nomeDaColuna(t.coluna_id) === coluna.nome.toLowerCase()
+        : t.coluna_id === coluna.id,
+    )
+  }
+
+  // trocar de cenário troca as colunas: a etapa aberta no mobile precisa existir
+  useEffect(() => {
+    if (colunas.length === 0) return setEtapaAtiva(null)
+    setEtapaAtiva((atual) =>
+      atual && colunas.some((c) => c.id === atual) ? atual : colunas[0].id,
+    )
+  }, [colunas])
 
   async function handleSalvarTarefa(input: TarefaInput, senha?: string) {
     if (modalTarefa) {
@@ -209,26 +234,62 @@ export function TarefasPage() {
 
   return (
     <AppLayout>
-      <div className="flex h-full flex-col overflow-hidden rounded-2xl bg-white p-4 shadow-sm sm:p-6 dark:bg-slate-800">
-        <header className="mb-4 flex shrink-0 flex-wrap items-end justify-between gap-4">
-          <div>
+      <div className="flex h-full flex-col overflow-hidden md:rounded-2xl md:bg-white md:p-4 md:shadow-sm lg:p-6 md:dark:bg-slate-800">
+        <header className="mb-3 flex shrink-0 flex-wrap items-end justify-between gap-3 md:mb-4 md:gap-4">
+          <div className="hidden md:block">
             <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Tarefas</h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Quadro kanban por cenário. Arraste os cartões entre as colunas.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-end gap-6">
-            <FiltroPessoas
-              dimensao={dimensaoFiltro}
-              onDimensao={setDimensaoFiltro}
-              pessoas={pessoasDoFiltro}
-              selecionado={filtroPessoa}
-              onSelecionar={setFiltroPessoa}
-            />
+          <div className="flex w-full flex-wrap items-end gap-3 md:w-auto md:gap-6">
+            {mobile ? (
+              <div className="min-w-0 flex-1">
+                <select
+                  value={filtroPessoa ? `${dimensaoFiltro}:${filtroPessoa}` : ''}
+                  onChange={(e) => {
+                    const valor = e.target.value
+                    if (!valor) return setFiltroPessoa(null)
+                    const [dimensao, id] = valor.split(':')
+                    setDimensaoFiltro(dimensao as DimensaoFiltro)
+                    setFiltroPessoa(id)
+                  }}
+                  aria-label="Filtrar por pessoa"
+                  className={seletorMobileClass}
+                >
+                  <option value="">Todas as pessoas</option>
+                  <optgroup label="Responsável">
+                    {responsaveis.map((pessoa) => (
+                      <option key={`r-${pessoa.id}`} value={`responsavel:${pessoa.id}`}>
+                        {pessoa.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Executor">
+                    {executores.map((pessoa) => (
+                      <option key={`e-${pessoa.id}`} value={`executor:${pessoa.id}`}>
+                        {pessoa.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+            ) : (
+              <FiltroPessoas
+                dimensao={dimensaoFiltro}
+                onDimensao={setDimensaoFiltro}
+                pessoas={pessoasDoFiltro}
+                selecionado={filtroPessoa}
+                onSelecionar={setFiltroPessoa}
+              />
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="cenario">
+            <div className="min-w-0 flex-1 md:flex-none">
+              <label
+                className="hidden text-sm font-medium text-slate-700 md:block dark:text-slate-300"
+                htmlFor="cenario"
+              >
                 Cenário
               </label>
               <select
@@ -239,7 +300,8 @@ export function TarefasPage() {
                   setCenarioId(e.target.value)
                 }}
                 disabled={cenarios.length === 0}
-                className="mt-1 block rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                aria-label="Cenário"
+                className={`${seletorMobileClass} md:mt-1 md:min-h-0 md:w-auto md:py-2`}
               >
                 {cenarios.length === 0 && <option value="">Nenhum cenário</option>}
                 {cenarios.length > 0 && <option value={TODOS}>Todos os cenários</option>}
@@ -253,11 +315,13 @@ export function TarefasPage() {
 
 
 
-<AddButton
-              onClick={() => setModalTarefa(null)}
-              label="Nova tarefa"
-              disabled={cenarios.length === 0 || todasColunas.length === 0}
-            />
+<div className="hidden md:block">
+              <AddButton
+                onClick={() => setModalTarefa(null)}
+                label="Nova tarefa"
+                disabled={cenarios.length === 0 || todasColunas.length === 0}
+              />
+            </div>
           </div>
         </header>
 
@@ -292,14 +356,10 @@ export function TarefasPage() {
           </p>
         )}
 
-        {!carregando && colunas.length > 0 && (
+        {!carregando && colunas.length > 0 && !mobile && (
           <div className="grid min-h-0 flex-1 gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
             {colunas.map((coluna) => {
-              const daColuna = tarefasVisiveis.filter((t) =>
-                cenarioId === TODOS
-                  ? nomeDaColuna(t.coluna_id) === coluna.nome.toLowerCase()
-                  : t.coluna_id === coluna.id,
-              )
+              const daColuna = tarefasDaColuna(coluna)
               const cor = CORES_COLUNA[coluna.cor] ?? CORES_COLUNA.slate
               return (
                 <section
@@ -361,7 +421,80 @@ export function TarefasPage() {
             })}
           </div>
         )}
+
+        {/* Mobile: uma etapa por vez. Sem colunas lado a lado — e sem arrastar,
+            que a API de drag do HTML não responde a toque. */}
+        {!carregando && colunas.length > 0 && mobile && (
+          <div className="flex min-h-0 flex-1 flex-col">
+            {/* as etapas viram cartões 2 por 2, cada um na cor da sua coluna */}
+            <div className="mb-3 grid shrink-0 grid-cols-2 gap-2 px-1 md:px-0" role="tablist" aria-label="Etapas">
+              {colunas.map((coluna) => {
+                const ativa = coluna.id === etapaAtiva
+                const cor = CORES_COLUNA[coluna.cor] ?? CORES_COLUNA.slate
+                return (
+                  <button
+                    key={coluna.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={ativa}
+                    onClick={() => setEtapaAtiva(coluna.id)}
+                    className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${cor.vivo} ${
+                      ativa
+                        ? 'ring-2 ring-inset ring-slate-900 dark:ring-white'
+                        : 'opacity-80'
+                    }`}
+                  >
+                    <span className="text-lg font-bold leading-none tabular-nums">
+                      {tarefasDaColuna(coluna).length}
+                    </span>
+                    <span className="truncate text-xs font-medium">{coluna.nome}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-1 pb-1 md:px-0">
+              {colunaAtiva && tarefasDaColuna(colunaAtiva).map((tarefa) => (
+                <TaskCard
+                  key={tarefa.id}
+                  compacto
+                  tarefa={tarefa}
+                  colunas={colunas}
+                  colunaSelecionadaId={colunaAtiva.id}
+                  pessoas={mapaPessoas}
+                  onEditar={setModalTarefa}
+                  onMover={handleMover}
+                  onDragStart={setArrastada}
+                  onDragEnd={() => {
+                    setArrastada(null)
+                    setColunaAlvo(null)
+                  }}
+                  arrastando={false}
+                />
+              ))}
+
+              {colunaAtiva && tarefasDaColuna(colunaAtiva).length === 0 && (
+                <p className="rounded-xl border border-dashed border-slate-300 px-3 py-10 text-center text-sm text-slate-400 dark:border-slate-600 dark:text-slate-500">
+                  Nenhuma tarefa em {colunaAtiva.nome}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {mobile && cenarios.length > 0 && todasColunas.length > 0 && (
+        <button
+          type="button"
+          onClick={() => setModalTarefa(null)}
+          className="fixed bottom-24 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          aria-label="Nova tarefa"
+        >
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+        </button>
+      )}
 
       {modalTarefa !== undefined && cenarios.length > 0 && (
         <TaskFormModal

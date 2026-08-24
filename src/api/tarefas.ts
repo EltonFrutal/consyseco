@@ -243,36 +243,49 @@ export async function moverTarefa(id: string, colunaId: string, ordem: number): 
 }
 
 /** Cores permitidas nas colunas — classes escritas por extenso por causa do purge do Tailwind. */
-export const CORES_COLUNA: Record<string, { rotulo: string; ponto: string; cabecalho: string; suave: string }> = {
+export const CORES_COLUNA: Record<
+  string,
+  { rotulo: string; ponto: string; cabecalho: string; suave: string; vivo: string; realce: string }
+> = {
   slate: {
     rotulo: 'Cinza',
     ponto: 'bg-slate-400',
     cabecalho: 'text-slate-600 dark:text-slate-300',
     suave: 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300',
+    vivo: 'bg-slate-500 text-white',
+    realce: 'border-l-4 border-l-slate-400 bg-slate-50 dark:bg-slate-500/15',
   },
   indigo: {
     rotulo: 'Azul',
     ponto: 'bg-indigo-500',
     cabecalho: 'text-indigo-600 dark:text-indigo-300',
     suave: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300',
+    vivo: 'bg-indigo-500 text-white',
+    realce: 'border-l-4 border-l-indigo-500 bg-indigo-50 dark:bg-indigo-500/15',
   },
   emerald: {
     rotulo: 'Verde',
     ponto: 'bg-emerald-500',
     cabecalho: 'text-emerald-600 dark:text-emerald-300',
     suave: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
+    vivo: 'bg-emerald-500 text-white',
+    realce: 'border-l-4 border-l-emerald-500 bg-emerald-50 dark:bg-emerald-500/15',
   },
   amber: {
     rotulo: 'Âmbar',
     ponto: 'bg-amber-500',
     cabecalho: 'text-amber-600 dark:text-amber-300',
     suave: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300',
+    vivo: 'bg-amber-500 text-slate-900',
+    realce: 'border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-500/15',
   },
   red: {
     rotulo: 'Vermelho',
     ponto: 'bg-red-500',
     cabecalho: 'text-red-600 dark:text-red-300',
     suave: 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300',
+    vivo: 'bg-red-500 text-white',
+    realce: 'border-l-4 border-l-red-500 bg-red-50 dark:bg-red-500/15',
   },
 }
 
