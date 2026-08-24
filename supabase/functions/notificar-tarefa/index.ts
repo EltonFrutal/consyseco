@@ -25,10 +25,11 @@ const EMOJI_ETAPA: Record<string, string> = {
   arquivo: '🗂️',
 }
 
-const PRIORIDADE_ROTULO: Record<string, string> = {
-  baixa: 'Baixa',
-  media: 'Média',
-  alta: 'Alta',
+/** Prioridade vai como bolinha, na mesma cor usada no cartão do kanban. */
+const PRIORIDADE_EMOJI: Record<string, string> = {
+  baixa: '⚪',
+  media: '🟡',
+  alta: '🔴',
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -147,7 +148,7 @@ Deno.serve(async (req) => {
   const cabecalho =
     evento === 'nova'
       ? `${emoji} *Nova tarefa para você*`
-      : `${emoji} *Tarefa movida para ${coluna?.nome ?? 'outra etapa'}*`
+      : `${emoji} *Tarefa ${coluna?.nome ?? ''}*`.trimEnd()
 
   // para o executor mostramos o responsável; para o responsável, o executor
   const contraparte = paraOResponsavel
@@ -164,8 +165,7 @@ Deno.serve(async (req) => {
     `Solicitante: ${solicitante?.name ?? '—'}`,
     `${rotuloContraparte}: ${contraparte?.name ?? '—'}`,
     `Cenário: ${cenario?.nome ?? '—'}`,
-    `Etapa: ${coluna?.nome ?? '—'}`,
-    `Prioridade: ${PRIORIDADE_ROTULO[tarefa.prioridade] ?? tarefa.prioridade}`,
+    `Prioridade: ${PRIORIDADE_EMOJI[tarefa.prioridade] ?? '⚪'}`,
   ]
   if (prazo) linhas.push(`Prazo: ${prazo}`)
 
