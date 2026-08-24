@@ -205,9 +205,9 @@ export function TaskFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 md:p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       {/* largura maior + duas colunas: cabe inteiro na tela, sem rolagem */}
-      <div className="flex h-full w-full flex-col overflow-hidden bg-white p-3 shadow-xl md:h-auto md:p-5 md:max-h-[95vh] md:max-w-3xl md:rounded-2xl md:p-5 dark:bg-slate-800">
+      <div className="flex max-h-full w-full flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl md:max-h-[95vh] md:max-w-3xl dark:bg-slate-800">
         <div className="flex items-baseline gap-2">
           <h3 className="text-base font-semibold text-slate-900 md:text-lg dark:text-white">
             {editando ? 'Editar tarefa' : 'Nova tarefa'}
