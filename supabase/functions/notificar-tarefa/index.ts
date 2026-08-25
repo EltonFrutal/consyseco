@@ -1,7 +1,7 @@
 // Avisa no WhatsApp quando uma tarefa é atribuída ou muda de etapa.
 //   - evento "nova":   quem recebe é o executor (mostra o responsável)
-//   - evento "status": quem mudou era o executor -> avisa o responsável
-//                      (mostra o executor); caso contrário avisa o executor.
+//   - evento "status": avisa o responsável; se a etapa de destino for a de
+//                      conclusão do cenário, a mensagem é de tarefa concluída.
 // O envio usa a mesma rota da integração: POST /send/text com o token da instância.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -30,6 +30,24 @@ const PRIORIDADE_EMOJI: Record<string, string> = {
   baixa: '⚪',
   media: '🟡',
   alta: '🔴',
+}
+
+const PRIORIDADE_ROTULO: Record<string, string> = {
+  baixa: 'Baixa',
+  media: 'Média',
+  alta: 'Alta',
+}
+
+/** Entregou no prazo ou atrasou? Compara só as datas, sem horas. */
+function avaliarPrazo(prazo: string | null): string {
+  if (!prazo) return ''
+  const limite = new Date(`${prazo}T00:00:00`)
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+
+  const dias = Math.round((hoje.getTime() - limite.getTime()) / 86400000)
+  if (dias <= 0) return '⏱️ Em tempo'
+  return `⚠️ Atraso de ${dias} ${dias === 1 ? 'dia' : 'dias'}`
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -93,8 +111,8 @@ Deno.serve(async (req) => {
 
   if (!tarefa) return jsonResponse({ error: 'Tarefa não encontrada.' }, 404)
 
-  // quem recebe o aviso
-  const paraOResponsavel = evento === 'status' && callerData.user.id === tarefa.executor_id
+  // tarefa nova avisa quem vai executar; alteração e conclusão avisam quem responde
+  const paraOResponsavel = evento !== 'nova'
   const destinatarioId = paraOResponsavel ? tarefa.responsavel_id : tarefa.executor_id
 
   if (!destinatarioId) {
@@ -127,7 +145,7 @@ Deno.serve(async (req) => {
   }
 
   const [{ data: coluna }, { data: cenario }] = await Promise.all([
-    admin.from('colunas').select('nome, icone').eq('id', tarefa.coluna_id).maybeSingle(),
+    admin.from('colunas').select('nome, icone, is_conclusao').eq('id', tarefa.coluna_id).maybeSingle(),
     admin.from('cenarios').select('nome').eq('id', tarefa.cenario_id).maybeSingle(),
   ])
 
@@ -144,30 +162,46 @@ Deno.serve(async (req) => {
     return jsonResponse({ enviado: false, motivo: 'Nenhuma instância do WhatsApp conectada.' })
   }
 
-  const emoji = evento === 'nova' ? '🆕' : EMOJI_ETAPA[coluna?.icone ?? 'lista'] ?? '📌'
-  const cabecalho =
-    evento === 'nova'
-      ? `${emoji} *Nova tarefa para você*`
-      : `${emoji} *Tarefa ${coluna?.nome ?? ''}*`.trimEnd()
-
-  // para o executor mostramos o responsável; para o responsável, o executor
-  const contraparte = paraOResponsavel
-    ? porId.get(tarefa.executor_id ?? '')
-    : porId.get(tarefa.responsavel_id ?? '')
-  const rotuloContraparte = paraOResponsavel ? 'Executor' : 'Responsável'
+  const executor = porId.get(tarefa.executor_id ?? '')
   const solicitante = porId.get(tarefa.solicitante_id ?? '')
+  const quemAgiu = porId.get(callerData.user.id)
   const prazo = formatarData(tarefa.prazo)
+  const prioridade = `${PRIORIDADE_EMOJI[tarefa.prioridade] ?? '⚪'} Prioridade: ${
+    PRIORIDADE_ROTULO[tarefa.prioridade] ?? tarefa.prioridade
+  }`
 
-  const linhas = [
-    cabecalho,
-    '',
-    `*#${tarefa.numero} — ${tarefa.titulo}*`,
-    `Solicitante: ${solicitante?.name ?? '—'}`,
-    `${rotuloContraparte}: ${contraparte?.name ?? '—'}`,
-    `Cenário: ${cenario?.nome ?? '—'}`,
-    `Prioridade: ${PRIORIDADE_EMOJI[tarefa.prioridade] ?? '⚪'}`,
-  ]
-  if (prazo) linhas.push(`Prazo: ${prazo}`)
+  // concluída é um caso próprio de mudança de etapa: a coluna de destino é a
+  // marcada como conclusão do cenário
+  const concluida = evento === 'status' && Boolean(coluna?.is_conclusao)
+
+  const linhas: string[] = []
+
+  if (evento === 'nova') {
+    linhas.push(`➕ *Tarefa incluída #${tarefa.numero}*`, '')
+    linhas.push(`Para: ${executor?.name ?? '—'}`)
+    linhas.push(`Título: ${tarefa.titulo}`)
+    linhas.push(prioridade)
+    linhas.push(`Solicitante: ${solicitante?.name ?? '—'}`)
+    if (prazo) linhas.push(`📅 Prazo: ${prazo}`)
+  } else if (concluida) {
+    linhas.push(`✅ *Tarefa concluída #${tarefa.numero}*`, '')
+    linhas.push(`Por: ${quemAgiu?.name ?? '—'}`)
+    linhas.push(`Título: ${tarefa.titulo}`)
+    linhas.push(prioridade)
+    if (prazo) {
+      linhas.push(`📅 Prazo: ${prazo}`)
+      linhas.push(avaliarPrazo(tarefa.prazo))
+    }
+  } else {
+    linhas.push(`🔄 *Tarefa alterada #${tarefa.numero}*`, '')
+    linhas.push(`${EMOJI_ETAPA[coluna?.icone ?? 'lista'] ?? '📌'} Status: ${coluna?.nome ?? '—'}`)
+    linhas.push(`Por: ${quemAgiu?.name ?? '—'}`)
+    linhas.push(`Título: ${tarefa.titulo}`)
+    linhas.push(prioridade)
+    if (prazo) linhas.push(`📅 Prazo: ${prazo}`)
+  }
+
+  linhas.push(`🗂️ Cenário: ${cenario?.nome ?? '—'}`)
 
   const texto = linhas.join('\n')
 
