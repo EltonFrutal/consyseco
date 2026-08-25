@@ -30,10 +30,11 @@ interface TaskFormModalProps {
 
 // text-base no mobile é obrigatório: abaixo de 16px o iOS dá zoom sozinho ao focar
 const inputClass =
-  'mt-1 block min-h-10 w-full rounded-lg border border-slate-300 px-3 py-1.5 text-base shadow-sm md:py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 md:min-h-0 md:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
-const labelClass = 'block text-xs font-medium text-slate-700 md:text-sm dark:text-slate-300'
+  'block min-h-[52px] w-full rounded-lg border border-slate-300 px-3 pb-1.5 pt-5 text-base shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 md:min-h-0 md:text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
+const labelClass =
+  'pointer-events-none absolute left-3 top-1 z-10 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400'
 const inputErroClass =
-  'mt-1 block min-h-10 w-full rounded-lg border border-red-500 px-3 py-1.5 text-base shadow-sm md:py-2 focus:outline-none focus:ring-2 focus:ring-red-500 md:min-h-0 md:text-sm dark:bg-slate-800 dark:text-slate-100'
+  'block min-h-[52px] w-full rounded-lg border border-red-500 px-3 pb-1.5 pt-5 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 md:min-h-0 md:text-sm dark:bg-slate-800 dark:text-slate-100'
 const erroCampoClass = 'mt-1 text-xs text-red-600 dark:text-red-400'
 
 const PRIORIDADES_FORM = [
@@ -205,7 +206,7 @@ export function TaskFormModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
       {/* largura maior + duas colunas: cabe inteiro na tela, sem rolagem */}
       <div className="flex max-h-full w-full flex-col overflow-hidden rounded-2xl bg-white p-5 shadow-xl md:max-h-[95vh] md:max-w-3xl dark:bg-slate-800">
         <div className="flex items-baseline gap-2">
@@ -226,7 +227,7 @@ export function TaskFormModal({
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto md:space-y-3">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-4 md:space-y-3">
-              <div>
+              <div className="relative">
                 <label className={labelClass} htmlFor="tarefa-titulo">
                   Título
                 </label>
@@ -248,7 +249,7 @@ export function TaskFormModal({
                 )}
               </div>
 
-              <div>
+              <div className="relative">
                 <label className={labelClass} htmlFor="tarefa-descricao">
                   Descrição
                 </label>
@@ -270,7 +271,7 @@ export function TaskFormModal({
             </div>
 
             <div className="space-y-4 md:space-y-3">
-              <div>
+              <div className="relative">
                 <label className={labelClass} htmlFor="tarefa-solicitante">
                   Solicitante
                 </label>
@@ -297,7 +298,7 @@ export function TaskFormModal({
                 )}
               </div>
 
-              <div>
+              <div className="relative">
                 <label className={labelClass} htmlFor="tarefa-responsavel">
                   Responsável
                 </label>
@@ -324,7 +325,7 @@ export function TaskFormModal({
                 )}
               </div>
 
-              <div>
+              <div className="relative">
                 <label className={labelClass} htmlFor="tarefa-executor">
                   Executor
                 </label>
@@ -355,7 +356,7 @@ export function TaskFormModal({
 
           {/* cenário, prazo, etapa e prioridade dividem as linhas de baixo */}
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:gap-4 lg:grid-cols-4">
-            <div>
+            <div className="relative">
               <label className={labelClass} htmlFor="tarefa-cenario">
                 Cenário
               </label>
@@ -381,7 +382,7 @@ export function TaskFormModal({
               {campos.cenario && <p className={erroCampoClass}>{campos.cenario}</p>}
             </div>
 
-            <div>
+            <div className="relative">
               <label className={labelClass} htmlFor="tarefa-prazo">
                 Prazo
               </label>
@@ -402,7 +403,7 @@ export function TaskFormModal({
               )}
             </div>
 
-            <div>
+            <div className="relative">
               <label className={labelClass} htmlFor="tarefa-coluna">
                 Etapa
               </label>
@@ -427,11 +428,11 @@ export function TaskFormModal({
               )}
             </div>
 
-            <div>
+            <div className="relative">
               <span className={labelClass} id="rotulo-prioridade">
                 Prioridade
               </span>
-              <div className="mt-1 flex gap-2" role="radiogroup" aria-labelledby="rotulo-prioridade">
+              <div className="mt-5 flex gap-2" role="radiogroup" aria-labelledby="rotulo-prioridade">
                 {PRIORIDADES_FORM.map((item) => {
                   const ativo = prioridade === item.valor
                   return (
