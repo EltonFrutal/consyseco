@@ -61,24 +61,31 @@ interface StatProps {
   valor: number
   detalhe: string
   destaque?: boolean
+  onClick: () => void
 }
 
-/** Stat tile: número em destaque, sem gráfico de uma barra só. */
-function Stat({ rotulo, valor, detalhe, destaque = false }: StatProps) {
+/** Stat tile: número em destaque, clicável para ver as tarefas que o compõem. */
+function Stat({ rotulo, valor, detalhe, destaque = false, onClick }: StatProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 dark:border-slate-700 dark:bg-slate-800">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={valor === 0}
+      title={valor === 0 ? 'Nenhuma tarefa' : `Ver as ${valor} tarefas`}
+      className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:border-indigo-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-default disabled:hover:border-slate-200 md:px-5 md:py-4 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-indigo-500/50 dark:disabled:hover:border-slate-700"
+    >
+      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500 md:text-xs dark:text-slate-400">
         {rotulo}
       </p>
       <p
-        className={`mt-1 text-3xl font-semibold leading-none tabular-nums ${
+        className={`mt-1 text-2xl font-semibold leading-none tabular-nums md:text-3xl ${
           destaque && valor > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-white'
         }`}
       >
         {valor}
       </p>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{detalhe}</p>
-    </div>
+      <p className="mt-1 hidden text-xs text-slate-500 md:block dark:text-slate-400">{detalhe}</p>
+    </button>
   )
 }
 
@@ -127,7 +134,16 @@ interface PeriodoBarras {
  * sem escalar tipografia, que é o que permite a página não rolar.
  * A escala considera só as séries visíveis — esconder uma reaproveita a altura.
  */
-function GraficoBarras({ dados, series }: { dados: PeriodoBarras[]; series: SerieVisivel }) {
+function GraficoBarras({
+  dados,
+  series,
+  onSelecionar,
+}: {
+  dados: PeriodoBarras[]
+  series: SerieVisivel
+  /** Quando existe, cada período vira botão — usado para abrir os meses do ano. */
+  onSelecionar?: (rotulo: string) => void
+}) {
   const visiveis = SERIES.filter((s) => series[s.chave])
   const maximo = Math.max(1, ...dados.flatMap((d) => visiveis.map((s) => d[s.chave])))
   const altura = (valor: number) => (valor === 0 ? 0 : Math.max(2, (valor / maximo) * 100))
@@ -135,9 +151,31 @@ function GraficoBarras({ dados, series }: { dados: PeriodoBarras[]; series: Seri
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* o pt-4 reserva a faixa do rótulo da barra mais alta, que fica fora dela */}
-      <div className="flex min-h-0 flex-1 items-stretch gap-1 pt-4" aria-hidden="true">
+      <div className="flex min-h-0 flex-1 items-stretch gap-1 pt-4" aria-hidden={!onSelecionar}>
         {dados.map((d) => (
-          <div key={d.rotulo} className="flex min-w-0 flex-1 flex-col justify-end">
+          <div
+            key={d.rotulo}
+            role={onSelecionar ? 'button' : undefined}
+            tabIndex={onSelecionar ? 0 : undefined}
+            aria-label={onSelecionar ? `Ver os meses de ${d.rotulo}` : undefined}
+            title={onSelecionar ? `Ver os meses de ${d.rotulo}` : undefined}
+            onClick={onSelecionar ? () => onSelecionar(d.rotulo) : undefined}
+            onKeyDown={
+              onSelecionar
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onSelecionar(d.rotulo)
+                    }
+                  }
+                : undefined
+            }
+            className={`flex min-w-0 flex-1 flex-col justify-end rounded-md ${
+              onSelecionar
+                ? 'cursor-pointer transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:hover:bg-slate-700/40'
+                : ''
+            }`}
+          >
             <div className="flex min-h-0 flex-1 items-end justify-center gap-[3px]">
               {visiveis.map((serie) => (
                 <div
@@ -187,6 +225,103 @@ function GraficoBarras({ dados, series }: { dados: PeriodoBarras[]; series: Seri
   )
 }
 
+interface ListaModalProps {
+  titulo: string
+  tarefas: Tarefa[]
+  pessoas: Map<string, Profile>
+  colunas: Map<string, string>
+  onFechar: () => void
+}
+
+/** Lista o que compõe um indicador. Só leitura: editar é no quadro. */
+function ListaDeTarefas({ titulo, tarefas, pessoas, colunas, onFechar }: ListaModalProps) {
+  useEffect(() => {
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') onFechar()
+    }
+    window.addEventListener('keydown', aoTeclar)
+    return () => window.removeEventListener('keydown', aoTeclar)
+  }, [onFechar])
+
+  const hoje = hojeZerado()
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/70 p-4 backdrop-blur-sm md:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-label={titulo}
+      onClick={onFechar}
+    >
+      <div
+        className="flex max-h-full w-full max-w-2xl flex-col rounded-2xl bg-white p-5 shadow-xl dark:bg-slate-800"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-center justify-between gap-2">
+          <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+            {titulo}
+            <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">
+              {tarefas.length}
+            </span>
+          </h3>
+          <button
+            type="button"
+            onClick={onFechar}
+            aria-label="Fechar"
+            title="Fechar"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-400 dark:hover:bg-slate-700"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <ul className="mt-3 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
+          {tarefas.map((tarefa) => {
+            const prazo = tarefa.prazo ? dataDoPrazo(tarefa.prazo) : null
+            const dias = prazo && prazo < hoje ? Math.round((hoje.getTime() - prazo.getTime()) / 86400000) : 0
+            return (
+              <li
+                key={tarefa.id}
+                className="rounded-lg bg-slate-50 px-3 py-2 dark:bg-slate-900/40"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="min-w-0 text-sm text-slate-800 dark:text-slate-100">
+                    <span className="mr-1.5 font-mono text-xs text-slate-400 dark:text-slate-500">
+                      #{tarefa.numero}
+                    </span>
+                    {tarefa.titulo}
+                  </span>
+                  <span
+                    className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${PRIORIDADES[tarefa.prioridade].ponto}`}
+                    title={`Prioridade ${PRIORIDADES[tarefa.prioridade].rotulo.toLowerCase()}`}
+                  />
+                </div>
+
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                  <span>{colunas.get(tarefa.coluna_id) ?? '—'}</span>
+                  <span>{tarefa.executor_id ? pessoas.get(tarefa.executor_id)?.name ?? '—' : 'Sem executor'}</span>
+                  {prazo && (
+                    <span className={dias > 0 ? 'text-red-600 dark:text-red-400' : ''}>
+                      {prazo.toLocaleDateString('pt-BR')}
+                    </span>
+                  )}
+                  {dias > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold tabular-nums text-white">
+                      {dias}
+                    </span>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
 export function DashboardPage() {
   const [departamentos, setDepartamentos] = useState<Departamento[]>([])
   const [colunas, setColunas] = useState<Coluna[]>([])
@@ -197,6 +332,7 @@ export function DashboardPage() {
   const [series, setSeries] = useState<SerieVisivel>({ criadas: true, finalizadas: true })
   const [ano, setAno] = useState(new Date().getFullYear())
   const [visao, setVisao] = useState<Visao>('mes')
+  const [indicador, setIndicador] = useState<'total' | 'vencidas' | 'alta' | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -237,11 +373,17 @@ export function DashboardPage() {
     [colunas, departamentoId],
   )
 
+  const mapaPessoas = useMemo(() => new Map(pessoas.map((p) => [p.id, p])), [pessoas])
+  const nomeDasColunas = useMemo(
+    () => new Map(colunas.map((c) => [c.id, c.nome])),
+    [colunas],
+  )
+
   const total = abertas.length
   const hoje = hojeZerado()
 
-  const vencidas = abertas.filter((t) => t.prazo && dataDoPrazo(t.prazo) < hoje).length
-  const altaPrioridade = abertas.filter((t) => t.prioridade === 'alta').length
+  const vencidas = abertas.filter((t) => t.prazo && dataDoPrazo(t.prazo) < hoje)
+  const altaPrioridade = abertas.filter((t) => t.prioridade === 'alta')
 
   /** Quando o filtro é "todos", colunas de mesmo nome somam (A fazer de vários departamentos). */
   const porEtapa = useMemo(() => {
@@ -260,16 +402,22 @@ export function DashboardPage() {
     return [...mapa.values()].sort((a, b) => a.ordem - b.ordem)
   }, [colunasFiltradas, abertas])
 
-  const porPrioridade = useMemo(
-    () =>
-      (['alta', 'media', 'baixa'] as const).map((chave) => ({
-        chave,
-        rotulo: PRIORIDADES[chave].rotulo,
-        cor: PRIORIDADES[chave].ponto,
-        valor: abertas.filter((t) => t.prioridade === chave).length,
-      })),
-    [abertas],
-  )
+  /** Quem está com o quê. Sem executor entra na lista: fila sem dono é o que
+   *  mais interessa enxergar. */
+  const porExecutor = useMemo(() => {
+    const contagem = new Map<string, number>()
+    abertas.forEach((t) => {
+      const chave = t.executor_id ?? 'sem'
+      contagem.set(chave, (contagem.get(chave) ?? 0) + 1)
+    })
+    return [...contagem.entries()]
+      .map(([id, valor]) => ({
+        id,
+        nome: id === 'sem' ? 'Sem executor' : mapaPessoas.get(id)?.name ?? '—',
+        valor,
+      }))
+      .sort((a, b) => b.valor - a.valor)
+  }, [abertas, mapaPessoas])
 
   /** Só quem aparece como executor entra no filtro — lista curta é lista usável. */
   const executores = useMemo(() => {
@@ -295,10 +443,13 @@ export function DashboardPage() {
   /** Visão "mês": os 12 meses do ano escolhido. Visão "ano": um agrupamento por ano. */
   const dadosDoGrafico = useMemo<PeriodoBarras[]>(() => {
     if (visao === 'ano') {
-      const base = anos
-        .slice()
-        .sort((a, b) => a - b)
-        .map((valor) => ({ rotulo: String(valor), criadas: 0, finalizadas: 0 }))
+      // cinco anos terminando no escolhido: comparar períodos exige régua fixa,
+      // senão a largura das barras muda conforme o banco tem mais histórico
+      const base = Array.from({ length: 5 }, (_, i) => ({
+        rotulo: String(ano - 4 + i),
+        criadas: 0,
+        finalizadas: 0,
+      }))
       const porRotulo = new Map(base.map((item) => [item.rotulo, item]))
 
       doExecutor.forEach((tarefa) => {
@@ -326,7 +477,6 @@ export function DashboardPage() {
     return base
   }, [doExecutor, visao, ano, anos])
 
-  const totalFinalizadas = dadosDoGrafico.reduce((soma, m) => soma + m.finalizadas, 0)
   // anos vêm do mais recente para o mais antigo: avançar é andar para trás no índice
   const indiceAno = anos.indexOf(ano)
 
@@ -405,10 +555,26 @@ export function DashboardPage() {
 
         {!carregando && !erro && doDepartamento.length > 0 && (
           <>
-            <div className="grid shrink-0 gap-4 sm:grid-cols-3 md:gap-6">
-              <Stat rotulo="Tarefas" valor={total} detalhe="em aberto, sem as finalizadas" />
-              <Stat rotulo="Vencidas" valor={vencidas} detalhe="prazo já passou" destaque />
-              <Stat rotulo="Prioridade alta" valor={altaPrioridade} detalhe="exigem atenção" />
+            <div className="grid shrink-0 grid-cols-3 gap-2 md:gap-6">
+              <Stat
+                rotulo="Tarefas"
+                valor={total}
+                detalhe="em aberto, sem as finalizadas"
+                onClick={() => setIndicador('total')}
+              />
+              <Stat
+                rotulo="Vencidas"
+                valor={vencidas.length}
+                detalhe="prazo já passou"
+                destaque
+                onClick={() => setIndicador('vencidas')}
+              />
+              <Stat
+                rotulo="Prioridade alta"
+                valor={altaPrioridade.length}
+                detalhe="exigem atenção"
+                onClick={() => setIndicador('alta')}
+              />
             </div>
 
             <div className="grid gap-4 md:min-h-0 md:flex-1 md:gap-6 lg:grid-cols-3">
@@ -432,16 +598,16 @@ export function DashboardPage() {
 
                 <section className={`${cartaoClass} md:flex-1`}>
                   <h2 className="shrink-0 text-sm font-semibold text-slate-900 dark:text-white">
-                    Por prioridade
+                    Por executor
                   </h2>
                   <ul className="mt-2 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
-                    {porPrioridade.map((item) => (
+                    {porExecutor.map((item) => (
                       <Barra
-                        key={item.chave}
-                        rotulo={item.rotulo}
+                        key={item.id}
+                        rotulo={item.nome}
                         valor={item.valor}
                         total={total}
-                        cor={item.cor}
+                        cor={item.id === 'sem' ? 'bg-slate-400' : 'bg-indigo-500'}
                       />
                     ))}
                   </ul>
@@ -452,11 +618,9 @@ export function DashboardPage() {
                 <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
                   <div>
                     <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
-                      Criadas e finalizadas {visao === 'ano' ? 'por ano' : `por mês em ${ano}`}
+                      Criadas e finalizadas{' '}
+                      {visao === 'ano' ? `por ano até ${ano}` : `por mês em ${ano}`}
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {totalFinalizadas} finalizadas no filtro atual
-                    </p>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
@@ -512,7 +676,12 @@ export function DashboardPage() {
                         <button
                           key={opcao.valor}
                           type="button"
-                          onClick={() => setVisao(opcao.valor)}
+                          onClick={() => {
+                            // clicar em "Mês" no botão volta ao ano corrente; o
+                            // ano específico só vem do clique na barra do ano
+                            if (opcao.valor === 'mes') setAno(new Date().getFullYear())
+                            setVisao(opcao.valor)
+                          }}
                           aria-pressed={visao === opcao.valor}
                           title={
                             opcao.valor === 'mes'
@@ -530,7 +699,7 @@ export function DashboardPage() {
                       ))}
                     </div>
 
-                    {visao === 'mes' && (
+                    {visao === 'ano' && (
                     <div
                       className="flex items-center gap-0.5 rounded-lg border border-slate-300 px-1 dark:border-slate-600"
                       role="group"
@@ -571,11 +740,40 @@ export function DashboardPage() {
                 </div>
 
                 <div className="mt-3 flex min-h-0 flex-1 flex-col">
-                  <GraficoBarras dados={dadosDoGrafico} series={series} />
+                  <GraficoBarras
+                    dados={dadosDoGrafico}
+                    series={series}
+                    onSelecionar={
+                      visao === 'ano'
+                        ? (rotulo) => {
+                            setAno(Number(rotulo))
+                            setVisao('mes')
+                          }
+                        : undefined
+                    }
+                  />
                 </div>
               </section>
             </div>
           </>
+        )}
+
+        {indicador && (
+          <ListaDeTarefas
+            titulo={
+              indicador === 'total'
+                ? 'Tarefas em aberto'
+                : indicador === 'vencidas'
+                  ? 'Tarefas vencidas'
+                  : 'Prioridade alta'
+            }
+            tarefas={
+              indicador === 'total' ? abertas : indicador === 'vencidas' ? vencidas : altaPrioridade
+            }
+            pessoas={mapaPessoas}
+            colunas={nomeDasColunas}
+            onFechar={() => setIndicador(null)}
+          />
         )}
       </div>
     </AppLayout>
