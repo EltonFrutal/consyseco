@@ -17,12 +17,26 @@ import type { Profile } from '../types/profile'
 
 type CampoData = 'conclusao' | 'finalizacao'
 
+// min-w-0 no campo: input[type=date] tem largura mínima intrínseca e estica a
+// coluna da grade, estourando o cartão no celular
 const inputClass =
-  'mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
+  'mt-1 block w-full min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
 const labelClass = 'block text-sm font-medium text-slate-700 dark:text-slate-300'
 
 function formatar(valor: string | null) {
   return valor ? new Date(valor).toLocaleString('pt-BR') : '—'
+}
+
+/** No cartão do celular a linha é estreita: sem segundos e com ano curto. */
+function formatarCurto(valor: string | null) {
+  if (!valor) return '—'
+  return new Date(valor).toLocaleString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 /** Data de hoje deslocada em dias, no formato do input date. */
@@ -156,7 +170,7 @@ export function FinalizadasPage() {
             />
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="filtro-departamento">
               Departamento
             </label>
@@ -175,7 +189,7 @@ export function FinalizadasPage() {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="filtro-campo-data">
               Filtrar pela data de
             </label>
@@ -190,7 +204,7 @@ export function FinalizadasPage() {
             </select>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="filtro-de">
               De
             </label>
@@ -203,7 +217,7 @@ export function FinalizadasPage() {
             />
           </div>
 
-          <div>
+          <div className="min-w-0">
             <label className={labelClass} htmlFor="filtro-ate">
               Até
             </label>
@@ -236,7 +250,53 @@ export function FinalizadasPage() {
         )}
 
         {!carregando && !erro && filtradas.length > 0 && (
-          <div className="overflow-x-auto">
+          <>
+            {/* mesma lógica da tela de usuários: oito colunas não cabem no
+                celular, então viram cartão com o essencial */}
+            <ul className="space-y-2 md:hidden">
+              {filtradas.map((tarefa) => (
+                <li
+                  key={tarefa.id}
+                  className="flex items-center gap-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-slate-400 dark:text-slate-500">
+                        #{tarefa.numero}
+                      </span>
+                      <span
+                        className={`h-2.5 w-2.5 shrink-0 rounded-full ${PRIORIDADES[tarefa.prioridade].ponto}`}
+                        title={`Prioridade ${PRIORIDADES[tarefa.prioridade].rotulo.toLowerCase()}`}
+                        aria-label={`Prioridade ${PRIORIDADES[tarefa.prioridade].rotulo.toLowerCase()}`}
+                        role="img"
+                      />
+                      <span className="truncate text-sm text-slate-900 dark:text-white" title={tarefa.titulo}>
+                        {tarefa.titulo}
+                      </span>
+                    </span>
+                    <span className="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">
+                      {nomeDe(tarefa.executor_id)} · {formatarCurto(tarefa.finalizada_em)}
+                    </span>
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleReabrir(tarefa)}
+                    disabled={processando}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700 transition hover:bg-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:opacity-50 dark:bg-amber-500/10 dark:text-amber-300"
+                    aria-label={`Reabrir a tarefa ${tarefa.titulo} e devolver para A fazer`}
+                    title="Voltar para A fazer"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M3 12a9 9 0 1 0 3-6.7" />
+                      <path d="M3 4v5h5" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
@@ -294,6 +354,7 @@ export function FinalizadasPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
