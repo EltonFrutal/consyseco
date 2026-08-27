@@ -25,6 +25,13 @@ function formatar(valor: string | null) {
   return valor ? new Date(valor).toLocaleString('pt-BR') : '—'
 }
 
+/** Data de hoje deslocada em dias, no formato do input date. */
+function emIso(deslocamentoEmDias: number) {
+  const data = new Date()
+  data.setDate(data.getDate() + deslocamentoEmDias)
+  return data.toISOString().slice(0, 10)
+}
+
 export function FinalizadasPage() {
   const { user } = useAuth()
   const [tarefas, setTarefas] = useState<Tarefa[]>([])
@@ -36,8 +43,8 @@ export function FinalizadasPage() {
   const [departamentoId, setDepartamentoId] = useState('todos')
   const [texto, setTexto] = useState('')
   const [campoData, setCampoData] = useState<CampoData>('finalizacao')
-  const [de, setDe] = useState('')
-  const [ate, setAte] = useState('')
+  const [de, setDe] = useState(() => emIso(-9))
+  const [ate, setAte] = useState(() => emIso(0))
   const [reabrindo, setReabrindo] = useState<Tarefa | null>(null)
   const [confirmandoReabertura, setConfirmandoReabertura] = useState<Tarefa | null>(null)
   const [processando, setProcessando] = useState(false)
@@ -233,23 +240,23 @@ export function FinalizadasPage() {
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                  <th className="py-2 font-medium">#</th>
-                  <th className="py-2 font-medium">Tarefa</th>
-                  <th className="py-2 font-medium">Solicitante</th>
-                  <th className="py-2 font-medium">Responsável</th>
-                  <th className="py-2 font-medium">Executor</th>
-                  <th className="py-2 font-medium">Concluída em</th>
-                  <th className="py-2 font-medium">Finalizada em</th>
-                  <th className="py-2 font-medium text-right">Ações</th>
+                  <th className="py-1.5 font-medium">#</th>
+                  <th className="py-1.5 font-medium">Tarefa</th>
+                  <th className="py-1.5 font-medium">Solicitante</th>
+                  <th className="py-1.5 font-medium">Responsável</th>
+                  <th className="py-1.5 font-medium">Executor</th>
+                  <th className="py-1.5 font-medium">Concluída em</th>
+                  <th className="py-1.5 font-medium">Finalizada em</th>
+                  <th className="py-1.5 font-medium text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filtradas.map((tarefa) => (
                   <tr key={tarefa.id} className="border-b border-slate-100 dark:border-slate-800">
-                    <td className="py-3 font-mono text-xs text-slate-400 dark:text-slate-500" title={tarefa.id}>
+                    <td className="py-1.5 font-mono text-xs text-slate-400 dark:text-slate-500" title={tarefa.id}>
                       {tarefa.numero}
                     </td>
-                    <td className="max-w-xs py-3">
+                    <td className="max-w-xs py-1.5">
                       <span className="flex items-center gap-2">
                         <span
                           className={`h-2.5 w-2.5 shrink-0 rounded-full ${PRIORIDADES[tarefa.prioridade].ponto}`}
@@ -262,21 +269,21 @@ export function FinalizadasPage() {
                         </span>
                       </span>
                     </td>
-                    <td className="py-3 text-slate-600 dark:text-slate-300">{nomeDe(tarefa.solicitante_id)}</td>
-                    <td className="py-3 text-slate-600 dark:text-slate-300">{nomeDe(tarefa.responsavel_id)}</td>
-                    <td className="py-3 text-slate-600 dark:text-slate-300">{nomeDe(tarefa.executor_id)}</td>
-                    <td className="py-3 text-slate-600 dark:text-slate-300">{formatar(tarefa.data_conclusao)}</td>
-                    <td className="py-3 text-slate-600 dark:text-slate-300">{formatar(tarefa.finalizada_em)}</td>
-                    <td className="py-3 text-right">
+                    <td className="py-1.5 text-slate-600 dark:text-slate-300">{nomeDe(tarefa.solicitante_id)}</td>
+                    <td className="py-1.5 text-slate-600 dark:text-slate-300">{nomeDe(tarefa.responsavel_id)}</td>
+                    <td className="py-1.5 text-slate-600 dark:text-slate-300">{nomeDe(tarefa.executor_id)}</td>
+                    <td className="py-1.5 text-slate-600 dark:text-slate-300">{formatar(tarefa.data_conclusao)}</td>
+                    <td className="py-1.5 text-slate-600 dark:text-slate-300">{formatar(tarefa.finalizada_em)}</td>
+                    <td className="py-1.5 text-right">
                       <button
                         type="button"
                         onClick={() => handleReabrir(tarefa)}
                         disabled={processando}
-                        className="ml-auto flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 dark:bg-amber-500/10 dark:text-amber-300"
+                        className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-700 transition hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 dark:bg-amber-500/10 dark:text-amber-300"
                         aria-label={`Reabrir a tarefa ${tarefa.titulo} e devolver para A fazer`}
                         title="Voltar para A fazer"
                       >
-                        <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                           <path d="M3 12a9 9 0 1 0 3-6.7" />
                           <path d="M3 4v5h5" />
                         </svg>
