@@ -141,7 +141,21 @@ export function FinalizadasPage() {
           </p>
         </header>
 
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-5">
+          <div className="col-span-2 xl:col-span-1">
+            <label className={labelClass} htmlFor="filtro-texto">
+              Pessoa ou tarefa
+            </label>
+            <input
+              id="filtro-texto"
+              type="search"
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              placeholder="Solicitante, responsável ou executor"
+              className={inputClass}
+            />
+          </div>
+
           <div>
             <label className={labelClass} htmlFor="filtro-departamento">
               Departamento
@@ -159,20 +173,6 @@ export function FinalizadasPage() {
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="sm:col-span-2 xl:col-span-1">
-            <label className={labelClass} htmlFor="filtro-texto">
-              Pessoa ou tarefa
-            </label>
-            <input
-              id="filtro-texto"
-              type="search"
-              value={texto}
-              onChange={(e) => setTexto(e.target.value)}
-              placeholder="Solicitante, responsável ou executor"
-              className={inputClass}
-            />
           </div>
 
           <div>
