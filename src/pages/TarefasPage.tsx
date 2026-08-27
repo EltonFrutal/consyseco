@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { AppLayout } from '../components/layout/AppLayout'
 import { TaskCard } from '../components/tarefas/TaskCard'
 import { TaskFormModal } from '../components/tarefas/TaskFormModal'
-import { CenarioManagerModal } from '../components/tarefas/CenarioManagerModal'
+import { DepartamentoManagerModal } from '../components/tarefas/DepartamentoManagerModal'
 import { AddButton } from '../components/ui/AddButton'
 import { ColunaIcone } from '../components/tarefas/ColunaIcone'
-import { FiltroPessoas, type DimensaoFiltro } from '../components/tarefas/FiltroPessoas'
+import type { DimensaoFiltro } from '../components/tarefas/FiltroPessoas'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { supabase } from '../lib/supabaseClient'
 import {
@@ -14,14 +14,17 @@ import {
   atualizarTarefa,
   criarTarefa,
   excluirTarefa,
-  listarCenarios,
+  listarClassificacoes,
+  listarDepartamentos,
   listarColunas,
   listarTarefas,
   listarTarefasDeTodos,
   listarTodasColunas,
   moverTarefa,
   notificarTarefa,
-  type Cenario,
+  type Classificacao,
+  type Departamento,
+  type Prioridade,
   type Coluna,
   type Tarefa,
   type TarefaInput,
@@ -30,18 +33,36 @@ import type { Profile } from '../types/profile'
 
 const TODOS = 'todos'
 
-const seletorMobileClass =
-  'block min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
+const seletorFiltroClass =
+  'block min-h-11 w-full min-w-0 rounded-lg border border-slate-300 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 md:min-h-9 md:w-auto dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100'
+
+type FiltroAtraso = 'todos' | 'sim' | 'nao'
+
+/** Hoje sem horas: o prazo é date puro, comparar com horas erra por um dia. */
+function hojeZerado() {
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  return hoje
+}
+
+/** Dias de atraso; 0 quando está no prazo ou não tem prazo. */
+export function diasDeAtraso(prazo: string | null): number {
+  if (!prazo) return 0
+  const limite = new Date(`${prazo}T00:00:00`)
+  const dias = Math.round((hojeZerado().getTime() - limite.getTime()) / 86400000)
+  return dias > 0 ? dias : 0
+}
 
 export function TarefasPage() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const [cenarios, setCenarios] = useState<Cenario[]>([])
-  const [cenarioId, setCenarioId] = useState(TODOS)
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([])
+  const [departamentoId, setDepartamentoId] = useState(TODOS)
   const [colunas, setColunas] = useState<Coluna[]>([])
   const [todasColunas, setTodasColunas] = useState<Coluna[]>([])
   const [tarefas, setTarefas] = useState<Tarefa[]>([])
   const [pessoas, setPessoas] = useState<Profile[]>([])
+  const [classificacoes, setClassificacoes] = useState<Classificacao[]>([])
 
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
@@ -55,7 +76,7 @@ export function TarefasPage() {
 
   const mapaPessoas = useMemo(() => new Map(pessoas.map((p) => [p.id, p])), [pessoas])
 
-  // só entra no filtro quem tem tarefa no cenário aberto
+  // só entra no filtro quem tem tarefa no departamento aberto
   const responsaveis = useMemo(() => {
     const ids = new Set(tarefas.map((t) => t.responsavel_id).filter(Boolean))
     return pessoas.filter((pessoa) => ids.has(pessoa.id))
@@ -66,44 +87,62 @@ export function TarefasPage() {
     return pessoas.filter((pessoa) => ids.has(pessoa.id))
   }, [tarefas, pessoas])
 
-  const pessoasDoFiltro = dimensaoFiltro === 'responsavel' ? responsaveis : executores
 
   const mobile = useIsMobile()
   const [etapaAtiva, setEtapaAtiva] = useState<string | null>(null)
+  const [filtroPrioridade, setFiltroPrioridade] = useState<Prioridade | typeof TODOS>(TODOS)
+  const [filtroAtraso, setFiltroAtraso] = useState<FiltroAtraso>(TODOS)
 
   const tarefasVisiveis = useMemo(() => {
-    if (!filtroPessoa) return tarefas
-    return tarefas.filter((t) =>
-      dimensaoFiltro === 'responsavel' ? t.responsavel_id === filtroPessoa : t.executor_id === filtroPessoa,
-    )
-  }, [tarefas, filtroPessoa, dimensaoFiltro])
+    return tarefas.filter((t) => {
+      if (filtroPessoa) {
+        const daPessoa =
+          dimensaoFiltro === 'responsavel'
+            ? t.responsavel_id === filtroPessoa
+            : t.executor_id === filtroPessoa
+        if (!daPessoa) return false
+      }
+
+      if (filtroPrioridade !== TODOS && t.prioridade !== filtroPrioridade) return false
+
+      if (filtroAtraso !== TODOS) {
+        const atrasada = diasDeAtraso(t.prazo) > 0
+        if (filtroAtraso === 'sim' && !atrasada) return false
+        if (filtroAtraso === 'nao' && atrasada) return false
+      }
+
+      return true
+    })
+  }, [tarefas, filtroPessoa, dimensaoFiltro, filtroPrioridade, filtroAtraso])
 
   const carregarBase = useCallback(async (selecionar?: string) => {
     setCarregando(true)
     setErro(null)
     try {
-      const [lista, cols, { data: perfis }] = await Promise.all([
-        listarCenarios(),
+      const [lista, cols, tipos, { data: perfis }] = await Promise.all([
+        listarDepartamentos(),
         listarTodasColunas(),
+        listarClassificacoes(),
         supabase.from('profiles').select('*').eq('status', 'active').order('name'),
       ])
-      setCenarios(lista)
+      setDepartamentos(lista)
       setTodasColunas(cols)
+      setClassificacoes(tipos)
       setPessoas((perfis as Profile[]) ?? [])
-      // o padrão é ver tudo; só troca se pedirem um cenário específico
+      // o padrão é ver tudo; só troca se pedirem um departamento específico
       const escolhido =
-        selecionar ?? (cenarioId === TODOS || lista.some((c) => c.id === cenarioId) ? cenarioId : TODOS)
-      setCenarioId(escolhido)
+        selecionar ?? (departamentoId === TODOS || lista.some((c) => c.id === departamentoId) ? departamentoId : TODOS)
+      setDepartamentoId(escolhido)
       if (!escolhido) {
         setColunas([])
         setTarefas([])
       }
     } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Não foi possível carregar os cenários.')
+      setErro(err instanceof Error ? err.message : 'Não foi possível carregar os departamentos.')
     } finally {
       setCarregando(false)
     }
-  }, [cenarioId])
+  }, [departamentoId])
 
   const carregarQuadro = useCallback(
     async (id: string) => {
@@ -137,20 +176,20 @@ export function TarefasPage() {
 
   useEffect(() => {
     carregarBase()
-    // carregarBase depende de cenarioId só para preservar a seleção; rodar uma vez basta
+    // carregarBase depende de departamentoId só para preservar a seleção; rodar uma vez basta
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
-    carregarQuadro(cenarioId)
-  }, [cenarioId, carregarQuadro])
+    carregarQuadro(departamentoId)
+  }, [departamentoId, carregarQuadro])
 
   // /tarefas/config é a rota do item Configuração: mantém o menu marcado
   useEffect(() => {
     setGerenciando(pathname === '/tarefas/config')
   }, [pathname])
 
-  const cenarioAtual = cenarios.find((c) => c.id === cenarioId) ?? null
+  const departamentoAtual = departamentos.find((c) => c.id === departamentoId) ?? null
   const colunaAtiva = colunas.find((c) => c.id === etapaAtiva) ?? null
 
   /** Nome (minúsculo) da coluna de uma tarefa — usado no modo "Todos". */
@@ -161,13 +200,13 @@ export function TarefasPage() {
   /** As tarefas de uma etapa. No modo "Todos" as colunas de mesmo nome somam. */
   function tarefasDaColuna(coluna: Coluna): Tarefa[] {
     return tarefasVisiveis.filter((t) =>
-      cenarioId === TODOS
+      departamentoId === TODOS
         ? nomeDaColuna(t.coluna_id) === coluna.nome.toLowerCase()
         : t.coluna_id === coluna.id,
     )
   }
 
-  // trocar de cenário troca as colunas: a etapa aberta no mobile precisa existir
+  // trocar de departamento troca as colunas: a etapa aberta no mobile precisa existir
   useEffect(() => {
     if (colunas.length === 0) return setEtapaAtiva(null)
     setEtapaAtiva((atual) =>
@@ -190,25 +229,25 @@ export function TarefasPage() {
       if (criada?.id) await notificarTarefa(criada.id, 'nova')
     }
     setModalTarefa(undefined)
-    await carregarQuadro(cenarioId)
+    await carregarQuadro(departamentoId)
   }
 
   async function handleExcluirTarefa(tarefa: Tarefa) {
     await excluirTarefa(tarefa.id)
     setModalTarefa(undefined)
-    await carregarQuadro(cenarioId)
+    await carregarQuadro(departamentoId)
   }
 
   async function handleMover(tarefa: Tarefa, colunaAlvoId: string) {
-    // no modo "Todos" a coluna clicada é de outro cenário: usar a de mesmo nome
+    // no modo "Todos" a coluna clicada é de outro departamento: usar a de mesmo nome
     let colunaDestino = colunaAlvoId
-    if (cenarioId === TODOS) {
+    if (departamentoId === TODOS) {
       const nomeAlvo = (todasColunas.find((c) => c.id === colunaAlvoId)?.nome ?? '').toLowerCase()
       const equivalente = todasColunas.find(
-        (c) => c.cenario_id === tarefa.cenario_id && c.nome.toLowerCase() === nomeAlvo,
+        (c) => c.departamento_id === tarefa.departamento_id && c.nome.toLowerCase() === nomeAlvo,
       )
       if (!equivalente) {
-        setErro('O cenário desta tarefa não tem uma etapa equivalente.')
+        setErro('O departamento desta tarefa não tem uma etapa equivalente.')
         return
       }
       colunaDestino = equivalente.id
@@ -239,87 +278,88 @@ export function TarefasPage() {
           <div className="hidden md:block">
             <h1 className="text-xl font-semibold text-slate-900 dark:text-white">Tarefas</h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Quadro kanban por cenário. Arraste os cartões entre as colunas.
+              Quadro kanban por departamento. Arraste os cartões entre as colunas.
             </p>
           </div>
 
-          <div className="flex w-full flex-wrap items-end gap-3 md:w-auto md:gap-6">
-            {mobile ? (
-              <div className="min-w-0 flex-1">
-                <select
-                  value={filtroPessoa ? `${dimensaoFiltro}:${filtroPessoa}` : ''}
-                  onChange={(e) => {
-                    const valor = e.target.value
-                    if (!valor) return setFiltroPessoa(null)
-                    const [dimensao, id] = valor.split(':')
-                    setDimensaoFiltro(dimensao as DimensaoFiltro)
-                    setFiltroPessoa(id)
-                  }}
-                  aria-label="Filtrar por pessoa"
-                  className={seletorMobileClass}
-                >
-                  <option value="">Todas as pessoas</option>
-                  <optgroup label="Responsável">
-                    {responsaveis.map((pessoa) => (
-                      <option key={`r-${pessoa.id}`} value={`responsavel:${pessoa.id}`}>
-                        {pessoa.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Executor">
-                    {executores.map((pessoa) => (
-                      <option key={`e-${pessoa.id}`} value={`executor:${pessoa.id}`}>
-                        {pessoa.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-            ) : (
-              <FiltroPessoas
-                dimensao={dimensaoFiltro}
-                onDimensao={setDimensaoFiltro}
-                pessoas={pessoasDoFiltro}
-                selecionado={filtroPessoa}
-                onSelecionar={setFiltroPessoa}
-              />
-            )}
-
-            <div className="min-w-0 flex-1 md:flex-none">
-              <label
-                className="hidden text-sm font-medium text-slate-700 md:block dark:text-slate-300"
-                htmlFor="cenario"
-              >
-                Cenário
-              </label>
-              <select
-                id="cenario"
-                value={cenarioId}
-                onChange={(e) => {
-                  setFiltroPessoa(null)
-                  setCenarioId(e.target.value)
-                }}
-                disabled={cenarios.length === 0}
-                aria-label="Cenário"
-                className={`${seletorMobileClass} md:mt-1 md:min-h-0 md:w-auto md:py-2`}
-              >
-                {cenarios.length === 0 && <option value="">Nenhum cenário</option>}
-                {cenarios.length > 0 && <option value={TODOS}>Todos os cenários</option>}
-                {cenarios.map((cenario) => (
-                  <option key={cenario.id} value={cenario.id}>
-                    {cenario.nome}
+          {/* mesmos filtros nas duas telas: 2x2 no celular, uma fila no desktop */}
+          <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:items-center md:gap-3">
+            <select
+              value={filtroPessoa ? `${dimensaoFiltro}:${filtroPessoa}` : ''}
+              onChange={(e) => {
+                const valor = e.target.value
+                if (!valor) return setFiltroPessoa(null)
+                const [dimensao, id] = valor.split(':')
+                setDimensaoFiltro(dimensao as DimensaoFiltro)
+                setFiltroPessoa(id)
+              }}
+              aria-label="Filtrar por pessoa"
+              className={seletorFiltroClass}
+            >
+              <option value="">Todas as pessoas</option>
+              <optgroup label="Responsável">
+                {responsaveis.map((pessoa) => (
+                  <option key={`r-${pessoa.id}`} value={`responsavel:${pessoa.id}`}>
+                    {pessoa.name}
                   </option>
                 ))}
-              </select>
-            </div>
+              </optgroup>
+              <optgroup label="Executor">
+                {executores.map((pessoa) => (
+                  <option key={`e-${pessoa.id}`} value={`executor:${pessoa.id}`}>
+                    {pessoa.name}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
 
+            <select
+              value={departamentoId}
+              onChange={(e) => {
+                setFiltroPessoa(null)
+                setDepartamentoId(e.target.value)
+              }}
+              disabled={departamentos.length === 0}
+              aria-label="Departamento"
+              className={seletorFiltroClass}
+            >
+              {departamentos.length === 0 && <option value="">Nenhum departamento</option>}
+              {departamentos.length > 0 && <option value={TODOS}>Todos os departamentos</option>}
+              {departamentos.map((departamento) => (
+                <option key={departamento.id} value={departamento.id}>
+                  {departamento.nome}
+                </option>
+              ))}
+            </select>
 
+            <select
+              value={filtroPrioridade}
+              onChange={(e) => setFiltroPrioridade(e.target.value as Prioridade | typeof TODOS)}
+              aria-label="Prioridade"
+              className={seletorFiltroClass}
+            >
+              <option value={TODOS}>Todas as prioridades</option>
+              <option value="alta">Prioridade alta</option>
+              <option value="media">Prioridade média</option>
+              <option value="baixa">Prioridade baixa</option>
+            </select>
 
-<div className="hidden md:block">
+            <select
+              value={filtroAtraso}
+              onChange={(e) => setFiltroAtraso(e.target.value as FiltroAtraso)}
+              aria-label="Em atraso"
+              className={seletorFiltroClass}
+            >
+              <option value={TODOS}>Atraso: todas</option>
+              <option value="sim">Só em atraso</option>
+              <option value="nao">Sem atraso</option>
+            </select>
+
+            <div className="hidden md:block">
               <AddButton
                 onClick={() => setModalTarefa(null)}
                 label="Nova tarefa"
-                disabled={cenarios.length === 0 || todasColunas.length === 0}
+                disabled={departamentos.length === 0 || todasColunas.length === 0}
               />
             </div>
           </div>
@@ -337,22 +377,22 @@ export function TarefasPage() {
           </p>
         )}
 
-        {!carregando && cenarios.length === 0 && (
+        {!carregando && departamentos.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center dark:border-slate-600">
-            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Nenhum cenário ainda</h2>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Nenhum departamento ainda</h2>
             <p className="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">
-              Um cenário é um quadro (ex.: Comercial, Suporte). Ele já nasce com as colunas A fazer, Em
+              Um departamento é um quadro (ex.: Comercial, Suporte). Ele já nasce com as colunas A fazer, Em
               andamento e Concluído, que você pode ajustar depois.
             </p>
             <div className="mt-4 flex justify-center">
-              <AddButton onClick={() => setGerenciando(true)} label="Criar primeiro cenário" />
+              <AddButton onClick={() => setGerenciando(true)} label="Criar primeiro departamento" />
             </div>
           </div>
         )}
 
-        {!carregando && cenarios.length > 0 && colunas.length === 0 && (
+        {!carregando && departamentos.length > 0 && colunas.length === 0 && (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Este cenário não tem colunas. Abra o gerenciador para cadastrar a primeira.
+            Este departamento não tem colunas. Abra o gerenciador para cadastrar a primeira.
           </p>
         )}
 
@@ -483,11 +523,11 @@ export function TarefasPage() {
         )}
       </div>
 
-      {mobile && cenarios.length > 0 && todasColunas.length > 0 && (
+      {mobile && departamentos.length > 0 && todasColunas.length > 0 && (
         <button
           type="button"
           onClick={() => setModalTarefa(null)}
-          className="fixed bottom-24 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+          className="fixed bottom-24 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
           aria-label="Nova tarefa"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -496,13 +536,14 @@ export function TarefasPage() {
         </button>
       )}
 
-      {modalTarefa !== undefined && cenarios.length > 0 && (
+      {modalTarefa !== undefined && departamentos.length > 0 && (
         <TaskFormModal
           key={modalTarefa?.id ?? 'nova'}
           open
-          cenarioId={cenarioAtual?.id ?? cenarios[0]?.id ?? ''}
-          cenarios={cenarios}
+          departamentoId={departamentoAtual?.id ?? departamentos[0]?.id ?? ''}
+          departamentos={departamentos}
           colunas={todasColunas}
+          classificacoes={classificacoes}
           pessoas={pessoas}
           tarefa={modalTarefa}
           onClose={() => setModalTarefa(undefined)}
@@ -510,16 +551,17 @@ export function TarefasPage() {
           onDelete={handleExcluirTarefa}
           onFinalizada={async () => {
             setModalTarefa(undefined)
-            await carregarQuadro(cenarioId)
+            await carregarQuadro(departamentoId)
           }}
         />
       )}
 
-      <CenarioManagerModal
+      <DepartamentoManagerModal
         open={gerenciando}
-        cenarios={cenarios}
-        cenarioAtual={cenarioAtual}
+        departamentos={departamentos}
+        departamentoAtual={departamentoAtual}
         colunas={colunas}
+        classificacoes={classificacoes}
         onClose={() => {
           setGerenciando(false)
           if (pathname === '/tarefas/config') navigate('/tarefas')

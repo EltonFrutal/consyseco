@@ -13,7 +13,7 @@ interface TaskCardProps {
   /** Mobile: só título, executor, data curta e o seletor de etapa. */
   compacto?: boolean
   /**
-   * Qual opção o seletor de etapa mostra. No modo "Todos os cenários" a lista
+   * Qual opção o seletor de etapa mostra. No modo "Todos os departamentos" a lista
    * de colunas é deduplicada por nome, então o coluna_id da tarefa pode não
    * estar nela — e o seletor cairia na primeira opção, mentindo a etapa.
    */
@@ -50,6 +50,7 @@ export function TaskCard({
   hoje.setHours(0, 0, 0, 0)
   const prazo = tarefa.prazo ? new Date(`${tarefa.prazo}T00:00:00`) : null
   const vencida = prazo ? prazo < hoje : false
+  const diasAtraso = prazo && vencida ? Math.round((hoje.getTime() - prazo.getTime()) / 86400000) : 0
   // no compacto o ano vai com dois dígitos: a linha é estreita no celular
   const prazoTexto = prazo
     ? prazo.toLocaleDateString(
@@ -162,6 +163,16 @@ export function TaskCard({
               <path d="M3 10h18M8 3v4M16 3v4" />
             </svg>
             {prazoTexto}
+          </span>
+        )}
+
+        {diasAtraso > 0 && (
+          <span
+            className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold tabular-nums text-white"
+            title={`${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'} de atraso`}
+            aria-label={`${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'} de atraso`}
+          >
+            {diasAtraso}
           </span>
         )}
 
