@@ -39,6 +39,16 @@ function formatarCurto(valor: string | null) {
   })
 }
 
+type Periodo = '10' | '30' | '90' | 'ano' | 'personalizado'
+
+const PERIODOS: { valor: Periodo; rotulo: string }[] = [
+  { valor: '10', rotulo: 'Últimos 10 dias' },
+  { valor: '30', rotulo: 'Últimos 30 dias' },
+  { valor: '90', rotulo: 'Últimos 90 dias' },
+  { valor: 'ano', rotulo: 'Este ano' },
+  { valor: 'personalizado', rotulo: 'Personalizado' },
+]
+
 /** Data de hoje deslocada em dias, no formato do input date. */
 function emIso(deslocamentoEmDias: number) {
   const data = new Date()
@@ -57,12 +67,27 @@ export function FinalizadasPage() {
   const [departamentoId, setDepartamentoId] = useState('todos')
   const [texto, setTexto] = useState('')
   const [campoData, setCampoData] = useState<CampoData>('finalizacao')
+  const [periodo, setPeriodo] = useState<Periodo>('10')
   const [de, setDe] = useState(() => emIso(-9))
   const [ate, setAte] = useState(() => emIso(0))
   const [reabrindo, setReabrindo] = useState<Tarefa | null>(null)
   const [confirmandoReabertura, setConfirmandoReabertura] = useState<Tarefa | null>(null)
   const [processando, setProcessando] = useState(false)
   const [erroReabrir, setErroReabrir] = useState<string | null>(null)
+
+  /** Períodos prontos evitam o campo de data no caminho comum: no iPhone ele
+   *  escreve a data por extenso e come a linha inteira. */
+  function aplicarPeriodo(valor: Periodo) {
+    setPeriodo(valor)
+    if (valor === 'personalizado') return
+
+    setAte(emIso(0))
+    if (valor === 'ano') {
+      setDe(`${new Date().getFullYear()}-01-01`)
+      return
+    }
+    setDe(emIso(-(Number(valor) - 1)))
+  }
 
   const carregar = useCallback(async () => {
     setCarregando(true)
@@ -205,6 +230,25 @@ export function FinalizadasPage() {
           </div>
 
           <div className="col-span-2 min-w-0 xl:col-span-1">
+            <label className={labelClass} htmlFor="filtro-periodo">
+              Período
+            </label>
+            <select
+              id="filtro-periodo"
+              value={periodo}
+              onChange={(e) => aplicarPeriodo(e.target.value as Periodo)}
+              className={inputClass}
+            >
+              {PERIODOS.map((item) => (
+                <option key={item.valor} value={item.valor}>
+                  {item.rotulo}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {periodo === 'personalizado' && (
+          <div className="col-span-2 min-w-0 xl:col-span-1">
             <label className={labelClass} htmlFor="filtro-de">
               De
             </label>
@@ -216,7 +260,9 @@ export function FinalizadasPage() {
               className={inputClass}
             />
           </div>
+          )}
 
+          {periodo === 'personalizado' && (
           <div className="col-span-2 min-w-0 xl:col-span-1">
             <label className={labelClass} htmlFor="filtro-ate">
               Até
@@ -229,6 +275,7 @@ export function FinalizadasPage() {
               className={inputClass}
             />
           </div>
+          )}
         </div>
 
         {carregando && (
