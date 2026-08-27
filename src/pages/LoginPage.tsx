@@ -15,7 +15,13 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-900">
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-lg dark:bg-slate-800">
-        <h1 className="mb-1 text-2xl font-semibold text-slate-900 dark:text-white">Consyseco</h1>
+        {/* a logo já traz o nome e a assinatura; o h1 fica só para leitor de tela */}
+        <img
+          src="/consys_nome.png"
+          alt="ConSys Consultoria Empresarial"
+          className="mx-auto mb-6 w-56 max-w-full"
+        />
+        <h1 className="sr-only">ConSys Consultoria Empresarial</h1>
         {hasAdmin === null && <p className="text-sm text-slate-500 dark:text-slate-400">Carregando...</p>}
         {hasAdmin === false && (
           <>
