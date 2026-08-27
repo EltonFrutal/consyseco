@@ -9,9 +9,88 @@ interface UsersTableProps {
 
 const actionButtonClass = 'flex h-8 w-8 items-center justify-center rounded-lg transition'
 
+/** Chave liga/desliga do status — o mesmo desenho nas duas visões. */
+function Status({ ativo }: { ativo: boolean }) {
+  return (
+    <span
+      className={ativo ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-300 dark:text-slate-600'}
+      title={ativo ? 'Ativo' : 'Desativado'}
+      aria-label={ativo ? 'Ativo' : 'Desativado'}
+      role="img"
+    >
+      <svg viewBox="0 0 44 24" className="h-6 w-11" aria-hidden="true">
+        <rect x="1" y="1" width="42" height="22" rx="11" fill="currentColor" />
+        <circle cx={ativo ? 32 : 12} cy="12" r="8" fill="white" />
+      </svg>
+    </span>
+  )
+}
+
+function Avatar({ user }: { user: Profile }) {
+  if (user.avatar_url) {
+    return <img src={user.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+  }
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+      {user.name.trim().charAt(0).toUpperCase()}
+    </span>
+  )
+}
+
 export function UsersTable({ users, onEdit, onToggleStatus, currentUserId }: UsersTableProps) {
   return (
-    <table className="w-full text-left text-sm">
+    <>
+      {/* No celular a tabela de sete colunas não cabe: vira lista de cartões,
+          sem as colunas de auditoria, que são conferência de mesa. */}
+      <ul className="space-y-2 md:hidden">
+        {users.map((user) => (
+          <li key={user.id}>
+            <div
+              onClick={() => onEdit(user)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onEdit(user)
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Editar ${user.name}`}
+              className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 p-3 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:border-slate-700"
+            >
+              <Avatar user={user} />
+
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-slate-900 dark:text-white">
+                  {user.name}
+                </span>
+                <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                  {user.email}
+                </span>
+              </span>
+
+              {user.id !== currentUserId ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggleStatus(user)
+                  }}
+                  aria-label={`${user.status === 'active' ? 'Desativar' : 'Reativar'} ${user.name}`}
+                  title={user.status === 'active' ? 'Desativar' : 'Reativar'}
+                  className="shrink-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                  <Status ativo={user.status === 'active'} />
+                </button>
+              ) : (
+                <Status ativo={user.status === 'active'} />
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+
+    <table className="hidden w-full text-left text-sm md:table">
       <thead>
         <tr className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
           <th className="py-2 font-medium">Nome</th>
@@ -41,33 +120,13 @@ export function UsersTable({ users, onEdit, onToggleStatus, currentUserId }: Use
           >
             <td className="py-3 text-slate-900 dark:text-white">
               <div className="flex items-center gap-3">
-                {user.avatar_url ? (
-                  <img src={user.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                ) : (
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-500 dark:bg-slate-700 dark:text-slate-400">
-                    {user.name.trim().charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <Avatar user={user} />
                 {user.name}
               </div>
             </td>
             <td className="py-3 text-slate-600 dark:text-slate-300">{user.email}</td>
             <td className="py-3">
-              <span
-                className={
-                  user.status === 'active'
-                    ? 'text-emerald-500 dark:text-emerald-400'
-                    : 'text-slate-300 dark:text-slate-600'
-                }
-                title={user.status === 'active' ? 'Ativo' : 'Desativado'}
-                aria-label={user.status === 'active' ? 'Ativo' : 'Desativado'}
-                role="img"
-              >
-                <svg viewBox="0 0 44 24" className="h-6 w-11" aria-hidden="true">
-                  <rect x="1" y="1" width="42" height="22" rx="11" fill="currentColor" />
-                  <circle cx={user.status === 'active' ? 32 : 12} cy="12" r="8" fill="white" />
-                </svg>
-              </span>
+              <Status ativo={user.status === 'active'} />
             </td>
             <td className="py-3 text-slate-600 dark:text-slate-300">
               {new Date(user.created_at).toLocaleDateString('pt-BR')}
@@ -129,5 +188,6 @@ export function UsersTable({ users, onEdit, onToggleStatus, currentUserId }: Use
         ))}
       </tbody>
     </table>
+    </>
   )
 }

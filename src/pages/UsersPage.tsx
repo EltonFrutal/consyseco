@@ -91,7 +91,7 @@ export function UsersPage() {
 
   return (
     <AppLayout>
-      <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-slate-800">
+      <div className="rounded-2xl bg-white p-4 shadow-sm md:p-6 dark:bg-slate-800">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Usuários</h2>
 <AddButton onClick={() => setModalUser(null)} label="Novo usuário" />
