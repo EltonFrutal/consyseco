@@ -204,7 +204,7 @@ export function FinalizadasPage() {
             </select>
           </div>
 
-          <div className="min-w-0">
+          <div className="col-span-2 min-w-0 xl:col-span-1">
             <label className={labelClass} htmlFor="filtro-de">
               De
             </label>
@@ -217,7 +217,7 @@ export function FinalizadasPage() {
             />
           </div>
 
-          <div className="min-w-0">
+          <div className="col-span-2 min-w-0 xl:col-span-1">
             <label className={labelClass} htmlFor="filtro-ate">
               Até
             </label>
