@@ -11,6 +11,7 @@ import {
   type Coluna,
   type Tarefa,
 } from '../api/tarefas'
+import { SeletorMultiplo } from '../components/ui/SeletorMultiplo'
 import type { Profile } from '../types/profile'
 
 const TODOS = 'todos'
@@ -28,20 +29,6 @@ const SERIES: { chave: ChaveSerie; rotulo: string; barra: string }[] = [
 const selectClass =
   'rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200'
 
-const setaAnoClass =
-  'flex h-7 w-7 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-400 dark:hover:bg-slate-700'
-
-const setaProps = {
-  viewBox: '0 0 24 24',
-  className: 'h-4 w-4',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
-  'aria-hidden': true,
-}
-
 const cartaoClass =
   'flex min-h-0 flex-col rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800'
 
@@ -58,14 +45,26 @@ function dataDoPrazo(prazo: string) {
 
 interface StatProps {
   rotulo: string
+  /** Versão curta para o celular, onde o rótulo inteiro é cortado. */
+  rotuloCurto?: string
   valor: number
   detalhe: string
   destaque?: boolean
+  /** Classe da bolinha que acompanha o rótulo (cor da prioridade). */
+  ponto?: string
   onClick: () => void
 }
 
 /** Stat tile: número em destaque, clicável para ver as tarefas que o compõem. */
-function Stat({ rotulo, valor, detalhe, destaque = false, onClick }: StatProps) {
+function Stat({
+  rotulo,
+  rotuloCurto,
+  valor,
+  detalhe,
+  destaque = false,
+  ponto,
+  onClick,
+}: StatProps) {
   return (
     <button
       type="button"
@@ -74,8 +73,10 @@ function Stat({ rotulo, valor, detalhe, destaque = false, onClick }: StatProps) 
       title={valor === 0 ? 'Nenhuma tarefa' : `Ver as ${valor} tarefas`}
       className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:border-indigo-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-default disabled:hover:border-slate-200 md:px-5 md:py-4 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-indigo-500/50 dark:disabled:hover:border-slate-700"
     >
-      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500 md:text-xs dark:text-slate-400">
-        {rotulo}
+      <p className="flex items-center gap-1.5 truncate text-[10px] font-medium uppercase tracking-wide text-slate-500 md:text-xs dark:text-slate-400">
+        {ponto && <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${ponto}`} aria-hidden="true" />}
+        <span className="truncate md:hidden">{rotuloCurto ?? rotulo}</span>
+        <span className="hidden truncate md:inline">{rotulo}</span>
       </p>
       <p
         className={`mt-1 text-2xl font-semibold leading-none tabular-nums md:text-3xl ${
@@ -148,6 +149,14 @@ function GraficoBarras({
   const maximo = Math.max(1, ...dados.flatMap((d) => visiveis.map((s) => d[s.chave])))
   const altura = (valor: number) => (valor === 0 ? 0 : Math.max(2, (valor / maximo) * 100))
 
+  if (dados.length === 0) {
+    return (
+      <p className="flex min-h-0 flex-1 items-center justify-center text-center text-sm text-slate-400 dark:text-slate-500">
+        Escolha ao menos um período no filtro.
+      </p>
+    )
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* o pt-4 reserva a faixa do rótulo da barra mais alta, que fica fora dela */}
@@ -202,8 +211,9 @@ function GraficoBarras({
       </div>
 
       {/* leitura por teclado e leitor de tela: a cor sozinha não informa nada */}
-      <table className="sr-only">
-        <caption>Tarefas criadas e finalizadas por período</caption>
+      {/* fallback do gráfico para leitor de tela; sem caption, que virava texto
+          solto na página */}
+      <table className="sr-only" aria-label="Criadas e finalizadas por período">
         <thead>
           <tr>
             <th scope="col">Período</th>
@@ -332,6 +342,7 @@ export function DashboardPage() {
   const [series, setSeries] = useState<SerieVisivel>({ criadas: true, finalizadas: true })
   const [ano, setAno] = useState(new Date().getFullYear())
   const [visao, setVisao] = useState<Visao>('mes')
+  const [anosSelecionados, setAnosSelecionados] = useState<string[]>([])
   const [indicador, setIndicador] = useState<'total' | 'vencidas' | 'alta' | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
@@ -443,13 +454,10 @@ export function DashboardPage() {
   /** Visão "mês": os 12 meses do ano escolhido. Visão "ano": um agrupamento por ano. */
   const dadosDoGrafico = useMemo<PeriodoBarras[]>(() => {
     if (visao === 'ano') {
-      // cinco anos terminando no escolhido: comparar períodos exige régua fixa,
-      // senão a largura das barras muda conforme o banco tem mais histórico
-      const base = Array.from({ length: 5 }, (_, i) => ({
-        rotulo: String(ano - 4 + i),
-        criadas: 0,
-        finalizadas: 0,
-      }))
+      const base = anosSelecionados
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((valor) => ({ rotulo: String(valor), criadas: 0, finalizadas: 0 }))
       const porRotulo = new Map(base.map((item) => [item.rotulo, item]))
 
       doExecutor.forEach((tarefa) => {
@@ -475,10 +483,8 @@ export function DashboardPage() {
       }
     })
     return base
-  }, [doExecutor, visao, ano, anos])
+  }, [doExecutor, visao, ano, anosSelecionados])
 
-  // anos vêm do mais recente para o mais antigo: avançar é andar para trás no índice
-  const indiceAno = anos.indexOf(ano)
 
   /** Clicar isola a série; clicar de novo na única visível volta a mostrar as duas. */
   function alternarSerie(chave: ChaveSerie) {
@@ -498,6 +504,12 @@ export function DashboardPage() {
   useEffect(() => {
     if (anos.length > 0 && !anos.includes(ano)) setAno(anos[0])
   }, [anos, ano])
+
+  // o filtro nasce com tudo marcado: gráfico vazio na primeira abertura não
+  // ensina nada a ninguém
+  useEffect(() => {
+    setAnosSelecionados(anos.map(String))
+  }, [anos])
 
   return (
     <AppLayout>
@@ -571,6 +583,8 @@ export function DashboardPage() {
               />
               <Stat
                 rotulo="Prioridade alta"
+                rotuloCurto="Prioridade"
+                ponto={PRIORIDADES.alta.ponto}
                 valor={altaPrioridade.length}
                 detalhe="exigem atenção"
                 onClick={() => setIndicador('alta')}
@@ -619,7 +633,7 @@ export function DashboardPage() {
                   <div>
                     <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
                       Criadas e finalizadas{' '}
-                      {visao === 'ano' ? `por ano até ${ano}` : `por mês em ${ano}`}
+                      {visao === 'ano' ? 'por ano' : `por mês em ${ano}`}
                     </h2>
                   </div>
 
@@ -700,41 +714,12 @@ export function DashboardPage() {
                     </div>
 
                     {visao === 'ano' && (
-                    <div
-                      className="flex items-center gap-0.5 rounded-lg border border-slate-300 px-1 dark:border-slate-600"
-                      role="group"
-                      aria-label="Ano do gráfico"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setAno(anos[indiceAno + 1] ?? ano)}
-                        disabled={indiceAno >= anos.length - 1}
-                        className={setaAnoClass}
-                        aria-label="Ano anterior"
-                        title="Ano anterior"
-                      >
-                        <svg {...setaProps}>
-                          <path d="M15 6l-6 6 6 6" />
-                        </svg>
-                      </button>
-
-                      <span className="min-w-10 text-center text-xs font-medium tabular-nums text-slate-700 dark:text-slate-200">
-                        {ano}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() => setAno(anos[indiceAno - 1] ?? ano)}
-                        disabled={indiceAno <= 0}
-                        className={setaAnoClass}
-                        aria-label="Próximo ano"
-                        title="Próximo ano"
-                      >
-                        <svg {...setaProps}>
-                          <path d="M9 6l6 6-6 6" />
-                        </svg>
-                      </button>
-                    </div>
+                      <SeletorMultiplo
+                        rotulo="Ano"
+                        opcoes={anos.map((valor) => ({ valor: String(valor), rotulo: String(valor) }))}
+                        selecionados={anosSelecionados}
+                        onChange={setAnosSelecionados}
+                      />
                     )}
                   </div>
                 </div>
