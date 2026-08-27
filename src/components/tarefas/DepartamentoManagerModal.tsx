@@ -105,14 +105,28 @@ export function DepartamentoManagerModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
       <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
-        <header>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Configuração</h3>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Escolha um departamento à esquerda para editar as etapas dele. Excluir um departamento apaga as
-            tarefas que estão nele.
-          </p>
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Configuração</h3>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Escolha um departamento à esquerda para editar as etapas dele. Excluir um departamento apaga
+              as tarefas que estão nele.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fechar"
+            title="Fechar"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:text-slate-400 dark:hover:bg-slate-700"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </header>
 
         {erro && (
