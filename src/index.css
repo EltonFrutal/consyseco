@@ -14,3 +14,47 @@ input[type='datetime-local'] {
 .dark input[type='datetime-local'] {
   color-scheme: dark;
 }
+
+/* Barra de rolagem discreta: a padrão do Windows é larga e clara demais, e
+   aparece em cada coluna do quadro. Fica fina, sem setas e sem trilho, e só
+   ganha contraste quando o ponteiro passa por cima.
+   `scrollbar-width` cobre Firefox; o `::-webkit-scrollbar` cobre Chrome e Edge. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.45) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgb(100 116 139 / 0.55) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgb(148 163 184 / 0.45);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(100 116 139 / 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgb(100 116 139 / 0.55);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(148 163 184 / 0.8);
+}
+
+/* o canto entre as duas barras herdava o cinza do sistema */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
