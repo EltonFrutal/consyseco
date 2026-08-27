@@ -283,7 +283,7 @@ export function TarefasPage() {
           </div>
 
           {/* mesmos filtros nas duas telas: 2x2 no celular, uma fila no desktop */}
-          <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:items-center md:gap-3">
+          <div className="grid w-full grid-cols-2 gap-2 px-1 md:flex md:w-auto md:items-center md:gap-3 md:px-0">
             <select
               value={filtroPessoa ? `${dimensaoFiltro}:${filtroPessoa}` : ''}
               onChange={(e) => {
@@ -324,7 +324,7 @@ export function TarefasPage() {
               className={seletorFiltroClass}
             >
               {departamentos.length === 0 && <option value="">Nenhum departamento</option>}
-              {departamentos.length > 0 && <option value={TODOS}>Todos os departamentos</option>}
+              {departamentos.length > 0 && <option value={TODOS}>Todos os deptos</option>}
               {departamentos.map((departamento) => (
                 <option key={departamento.id} value={departamento.id}>
                   {departamento.nome}

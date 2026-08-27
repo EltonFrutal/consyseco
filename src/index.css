@@ -15,22 +15,14 @@ input[type='datetime-local'] {
   color-scheme: dark;
 }
 
-/* Barra de rolagem discreta: a padrão do Windows é larga e clara demais, e
-   aparece em cada coluna do quadro. Fica fina, sem setas e sem trilho, e só
-   ganha contraste quando o ponteiro passa por cima.
-   `scrollbar-width` cobre Firefox; o `::-webkit-scrollbar` cobre Chrome e Edge. */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(148 163 184 / 0.45) transparent;
-}
-
-.dark * {
-  scrollbar-color: rgb(100 116 139 / 0.55) transparent;
-}
-
+/* Barra de rolagem discreta.
+   Ordem importa: no Chromium, definir `scrollbar-width` faz o motor ignorar
+   as regras `::-webkit-scrollbar` e desenhar a barra fina dele — que ainda
+   reserva trilho e fica grossa. Por isso as propriedades padrão ficam
+   isoladas no @supports do Firefox, único que não entende ::-webkit. */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -38,23 +30,34 @@ input[type='datetime-local'] {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgb(148 163 184 / 0.45);
+  background-color: rgb(148 163 184 / 0.28);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(100 116 139 / 0.7);
+  background-color: rgb(100 116 139 / 0.6);
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background-color: rgb(100 116 139 / 0.55);
+  background-color: rgb(148 163 184 / 0.22);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background-color: rgb(148 163 184 / 0.8);
+  background-color: rgb(148 163 184 / 0.5);
 }
 
 /* o canto entre as duas barras herdava o cinza do sistema */
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(148 163 184 / 0.45) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgb(100 116 139 / 0.55) transparent;
+  }
 }

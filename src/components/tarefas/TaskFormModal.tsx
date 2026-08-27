@@ -372,7 +372,7 @@ export function TaskFormModal({
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:gap-4 lg:grid-cols-4">
             <div className="relative">
               <label className={labelClass} htmlFor="tarefa-departamento">
-                Departamento
+                Depto
               </label>
               <select
                 id="tarefa-departamento"
