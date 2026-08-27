@@ -4,11 +4,27 @@ interface ConfirmDialogProps {
   description: string
   confirmLabel: string
   error?: string | null
+  /** `positivo` para ações que não destroem nada — finalizar, por exemplo. */
+  tom?: 'perigo' | 'positivo'
   onConfirm: () => void
   onCancel: () => void
 }
 
-export function ConfirmDialog({ open, title, description, confirmLabel, error, onConfirm, onCancel }: ConfirmDialogProps) {
+const TOM = {
+  perigo: 'bg-red-600 hover:bg-red-500 focus:ring-red-500',
+  positivo: 'bg-emerald-600 hover:bg-emerald-500 focus:ring-emerald-500',
+}
+
+export function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmLabel,
+  error,
+  tom = 'perigo',
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) {
   if (!open) return null
 
   return (
@@ -28,7 +44,7 @@ export function ConfirmDialog({ open, title, description, confirmLabel, error, o
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500"
+            className={`rounded-lg px-4 py-2 text-sm font-medium text-white transition focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${TOM[tom]}`}
           >
             {confirmLabel}
           </button>

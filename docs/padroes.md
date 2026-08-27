@@ -40,9 +40,12 @@ A dica do embed é o **nome da coluna** — usar o nome da constraint (`profiles
   (`src/components/ui/ActionButtons.tsx`): **Salvar** (disquete) e **Cancelar** (X) levam
   ícone + texto; **Excluir** é só a lixeira, em 44px com `aria-label`/`title`.
   Ações com nome próprio ("Salvar e conectar", "Remover mesmo assim") continuam com texto.
-- **Ação de incluir usa sempre o `AddButton`** (`src/components/ui/AddButton.tsx`): quadrado de 44px,
-  fundo indigo, somente o ícone de `+`, com `aria-label` e `title` descrevendo a ação
-  ("Novo usuário", "Nova tarefa", "Adicionar coluna"). Nunca escrever o texto no botão.
+- **Ação de incluir usa sempre o `AddButton`** (`src/components/ui/AddButton.tsx`): **redondo**,
+  44px, **verde** (`emerald-600`), somente o ícone de `+`, com `aria-label` e `title` descrevendo
+  a ação ("Novo usuário", "Nova tarefa", "Adicionar coluna"). Nunca escrever o texto no botão.
+  Redondo e verde é a assinatura de "incluir" no sistema: nenhuma outra ação usa essa combinação,
+  então a pessoa reconhece o botão antes de ler qualquer coisa. Vale também para o botão
+  flutuante do mobile, que é o mesmo "incluir" em outra posição.
 - Demais ações de linha (editar, excluir, ativar/desativar) também são **somente ícone**,
   com `aria-label` e `title`.
 - Botões de formulário dentro de modal (Salvar / Cancelar) continuam com texto.
@@ -69,6 +72,31 @@ A dica do embed é o **nome da coluna** — usar o nome da constraint (`profiles
 - Status booleano é exibido como **chave liga/desliga**: verde com o botão à direita quando ativo,
   cinza com o botão à esquerda quando inativo.
 - Botões primários de formulário (Salvar/Cancelar) continuam com texto.
+
+## Confirmação antes de agir
+
+Toda ação **destrutiva ou difícil de desfazer** pergunta antes, no componente
+`ConfirmDialog` (`src/components/ui/ConfirmDialog.tsx`). Sem exceção:
+
+- excluir qualquer registro (tarefa, departamento, etapa, classificação, anexo);
+- finalizar e reabrir tarefa;
+- desativar usuário.
+
+Regras da pergunta:
+
+1. **O título diz o que vai acontecer**, com o nome ou número do registro:
+   "Excluir o departamento Suporte?", não "Tem certeza?".
+2. **A descrição diz a consequência**, principalmente o efeito em cascata:
+   "As etapas e todas as tarefas dele são excluídas junto."
+3. **O rótulo do botão repete a ação** ("Sim, excluir", "Sim, finalizar"), nunca
+   só "OK" — em diálogo de confirmação, "OK" não diz a que se está concordando.
+4. **`tom="perigo"` (vermelho) só quando há perda de dado.** Ação reversível usa
+   `tom="positivo"` (verde); vermelho em ação reversível ensina a ignorar o
+   vermelho.
+5. **A confirmação vem antes da senha.** Quando a ação também exige a senha do
+   responsável, a ordem é confirmar → pedir senha. O contrário obriga a pessoa a
+   digitar a senha para só depois descobrir o que vai acontecer, e a desistência
+   fica cara.
 
 ## Fotos / uploads
 

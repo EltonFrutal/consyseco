@@ -4,12 +4,13 @@ import { supabase } from '../lib/supabaseClient'
 import {
   FinalizarError,
   PRIORIDADES,
-  listarCenarios,
+  listarDepartamentos,
   listarFinalizadas,
   reabrirTarefa,
-  type Cenario,
+  type Departamento,
   type Tarefa,
 } from '../api/tarefas'
+import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { SenhaResponsavelDialog } from '../components/tarefas/SenhaResponsavelDialog'
 import { useAuth } from '../contexts/AuthContext'
 import type { Profile } from '../types/profile'
@@ -31,13 +32,14 @@ export function FinalizadasPage() {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState<string | null>(null)
 
-  const [cenarios, setCenarios] = useState<Cenario[]>([])
-  const [cenarioId, setCenarioId] = useState('todos')
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([])
+  const [departamentoId, setDepartamentoId] = useState('todos')
   const [texto, setTexto] = useState('')
   const [campoData, setCampoData] = useState<CampoData>('finalizacao')
   const [de, setDe] = useState('')
   const [ate, setAte] = useState('')
   const [reabrindo, setReabrindo] = useState<Tarefa | null>(null)
+  const [confirmandoReabertura, setConfirmandoReabertura] = useState<Tarefa | null>(null)
   const [processando, setProcessando] = useState(false)
   const [erroReabrir, setErroReabrir] = useState<string | null>(null)
 
@@ -45,24 +47,24 @@ export function FinalizadasPage() {
     setCarregando(true)
     setErro(null)
     try {
-      const [lista, listaCenarios, { data: perfis }] = await Promise.all([
-        listarFinalizadas({ texto, cenarioId, campoData, de, ate }),
-        listarCenarios(),
+      const [lista, listaDepartamentos, { data: perfis }] = await Promise.all([
+        listarFinalizadas({ texto, departamentoId, campoData, de, ate }),
+        listarDepartamentos(),
         supabase.from('profiles').select('*').order('name'),
       ])
       setTarefas(lista)
-      setCenarios(listaCenarios)
+      setDepartamentos(listaDepartamentos)
       setPessoas((perfis as Profile[]) ?? [])
     } catch (err) {
       setErro(err instanceof Error ? err.message : 'Não foi possível carregar as tarefas finalizadas.')
     } finally {
       setCarregando(false)
     }
-  }, [campoData, de, ate, texto, cenarioId])
+  }, [campoData, de, ate, texto, departamentoId])
 
   useEffect(() => {
     carregar()
-  }, [campoData, de, ate, cenarioId])
+  }, [campoData, de, ate, departamentoId])
 
   async function executarReabertura(tarefa: Tarefa, senha?: string) {
     setProcessando(true)
@@ -86,7 +88,13 @@ export function FinalizadasPage() {
     }
   }
 
+  // confirmar primeiro, pedir senha depois — padrão do sistema
   function handleReabrir(tarefa: Tarefa) {
+    setConfirmandoReabertura(tarefa)
+  }
+
+  function handleConfirmarReabertura(tarefa: Tarefa) {
+    setConfirmandoReabertura(null)
     if (tarefa.responsavel_id && tarefa.responsavel_id === user?.id) {
       executarReabertura(tarefa)
       return
@@ -128,19 +136,19 @@ export function FinalizadasPage() {
 
         <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <div>
-            <label className={labelClass} htmlFor="filtro-cenario">
-              Cenário
+            <label className={labelClass} htmlFor="filtro-departamento">
+              Departamento
             </label>
             <select
-              id="filtro-cenario"
-              value={cenarioId}
-              onChange={(e) => setCenarioId(e.target.value)}
+              id="filtro-departamento"
+              value={departamentoId}
+              onChange={(e) => setDepartamentoId(e.target.value)}
               className={inputClass}
             >
               <option value="todos">Todos</option>
-              {cenarios.map((cenario) => (
-                <option key={cenario.id} value={cenario.id}>
-                  {cenario.nome}
+              {departamentos.map((departamento) => (
+                <option key={departamento.id} value={departamento.id}>
+                  {departamento.nome}
                 </option>
               ))}
             </select>
@@ -281,6 +289,22 @@ export function FinalizadasPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmandoReabertura !== null}
+        tom="positivo"
+        title={`Reabrir a tarefa #${confirmandoReabertura?.numero ?? ''}?`}
+        description={
+          confirmandoReabertura?.responsavel_id === user?.id
+            ? 'Ela volta para a primeira etapa do departamento e reaparece no quadro.'
+            : 'Ela volta para o quadro. Como você não é o responsável, a senha dele será pedida em seguida.'
+        }
+        confirmLabel="Sim, reabrir"
+        onConfirm={() =>
+          confirmandoReabertura && handleConfirmarReabertura(confirmandoReabertura)
+        }
+        onCancel={() => setConfirmandoReabertura(null)}
+      />
 
       <SenhaResponsavelDialog
         open={reabrindo !== null}

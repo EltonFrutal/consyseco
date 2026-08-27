@@ -126,7 +126,8 @@ docs/superpowers/ # specs e planos de trabalho (não é código da aplicação)
 - Acessibilidade mínima: foco visível, label em todo input, contraste adequado, navegação por teclado.
 - **Tema claro/escuro:** toda cor precisa do par `dark:`. O tema é uma classe `dark` no `<html>`, controlada por `ThemeToggle`.
 - Padrões visuais fechados com o usuário (ver `docs/padroes.md`): ações **somente ícone** (com `aria-label` e `title`), clique na linha abre a edição, status booleano como chave liga/desliga, colunas de auditoria no fim da listagem.
-- **Incluir registro é sempre o componente `AddButton`** (botão só com `+`). Tela nova que cadastra algo usa esse componente — não criar botão com texto "Novo X".
+- **Ação destrutiva ou difícil de desfazer sempre pergunta antes**, via `ConfirmDialog` — e a confirmação vem **antes** de qualquer pedido de senha. O título nomeia o registro, a descrição diz a consequência em cascata e o botão repete a ação. Vermelho só quando há perda de dado (ver `docs/padroes.md`).
+- **Incluir registro é sempre o componente `AddButton`**: botão **redondo, verde, só com `+`**. Tela nova que cadastra algo usa esse componente — não criar botão com texto "Novo X". O botão flutuante do mobile segue o mesmo padrão.
 - **Salvar (disquete) e Cancelar (X) são ícone + texto; Excluir é só a lixeira** — componentes em `src/components/ui/ActionButtons.tsx`. Botão com nome próprio de ação (ex.: "Salvar e conectar") mantém o texto.
 
 ## 9. Definition of Done e fluxo de entrega
