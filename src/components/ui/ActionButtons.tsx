@@ -1,6 +1,8 @@
 /**
  * Botões padrão de ação do projeto — ver docs/padroes.md.
  * Salvar e Cancelar levam ícone + texto; Excluir é somente o ícone da lixeira.
+ * No mobile o texto de Cancelar some: quatro botões com rótulo não cabem em
+ * 375px e a fila quebrava linha. Salvar mantém o texto por ser a ação primária.
  */
 
 const iconeProps = {
@@ -16,6 +18,9 @@ const iconeProps = {
 
 const comTexto =
   'flex h-11 items-center gap-2 rounded-lg px-4 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800'
+
+/** Rótulo que some no mobile — o ícone e o aria-label seguram o significado. */
+const soNoDesktop = 'hidden md:inline'
 
 interface BotaoProps {
   onClick?: () => void
@@ -49,12 +54,14 @@ export function CancelButton({ onClick, disabled = false, label = 'Cancelar' }: 
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`${comTexto} border border-slate-300 text-slate-600 hover:bg-slate-100 focus:ring-indigo-500 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700`}
+      aria-label={label}
+      title={label}
+      className={`${comTexto} border border-slate-300 px-3 text-slate-600 hover:bg-slate-100 focus:ring-indigo-500 md:px-4 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700`}
     >
       <svg {...iconeProps}>
         <path d="M6 6l12 12M18 6L6 18" />
       </svg>
-      {label}
+      <span className={soNoDesktop}>{label}</span>
     </button>
   )
 }

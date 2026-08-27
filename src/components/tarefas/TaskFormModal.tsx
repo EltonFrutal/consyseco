@@ -3,23 +3,27 @@ import {
   CAMPOS_RESTRITOS,
   FinalizarError,
   finalizarTarefa,
-  type Cenario,
+  type Classificacao,
+  type Departamento,
   type Coluna,
   type Prioridade,
   type Tarefa,
   type TarefaInput,
 } from '../../api/tarefas'
 import { CancelButton, DeleteButton, SaveButton } from '../ui/ActionButtons'
+import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { AnexosTarefa } from './AnexosTarefa'
 import { SenhaResponsavelDialog } from './SenhaResponsavelDialog'
 import type { Profile } from '../../types/profile'
 import { useAuth } from '../../contexts/AuthContext'
 
 interface TaskFormModalProps {
   open: boolean
-  cenarioId: string
-  cenarios: Cenario[]
-  /** Todas as colunas: o select de etapa filtra pelas do cenário escolhido. */
+  departamentoId: string
+  departamentos: Departamento[]
+  /** Todas as colunas: o select de etapa filtra pelas do departamento escolhido. */
   colunas: Coluna[]
+  classificacoes: Classificacao[]
   pessoas: Profile[]
   tarefa: Tarefa | null
   onClose: () => void
@@ -45,9 +49,10 @@ const PRIORIDADES_FORM = [
 
 export function TaskFormModal({
   open,
-  cenarioId,
-  cenarios,
+  departamentoId,
+  departamentos,
   colunas,
+  classificacoes,
   pessoas,
   tarefa,
   onClose,
@@ -58,19 +63,21 @@ export function TaskFormModal({
   const { user } = useAuth()
   const [titulo, setTitulo] = useState(tarefa?.titulo ?? '')
   const [descricao, setDescricao] = useState(tarefa?.descricao ?? '')
-  const [cenarioSelecionado, setCenarioSelecionado] = useState(tarefa?.cenario_id ?? cenarioId)
-  const colunasDoCenario = colunas.filter((c) => c.cenario_id === cenarioSelecionado)
-  const [colunaId, setColunaId] = useState(tarefa?.coluna_id ?? colunasDoCenario[0]?.id ?? '')
+  const [departamentoSelecionado, setDepartamentoSelecionado] = useState(tarefa?.departamento_id ?? departamentoId)
+  const colunasDoDepartamento = colunas.filter((c) => c.departamento_id === departamentoSelecionado)
+  const [colunaId, setColunaId] = useState(tarefa?.coluna_id ?? colunasDoDepartamento[0]?.id ?? '')
   const [solicitanteId, setSolicitanteId] = useState(tarefa?.solicitante_id ?? '')
   const [responsavelId, setResponsavelId] = useState(tarefa?.responsavel_id ?? '')
   const [executorId, setExecutorId] = useState(tarefa?.executor_id ?? '')
   const [prazo, setPrazo] = useState(tarefa?.prazo ?? '')
   const [prioridade, setPrioridade] = useState<Prioridade>(tarefa?.prioridade ?? 'media')
+  const [classificacaoId, setClassificacaoId] = useState(tarefa?.classificacao_id ?? '')
   const [erro, setErro] = useState<string | null>(null)
   const [campos, setCampos] = useState<Record<string, string>>({})
   const [salvando, setSalvando] = useState(false)
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false)
   const [finalizando, setFinalizando] = useState(false)
+  const [confirmandoFinalizar, setConfirmandoFinalizar] = useState(false)
   const [pedindoSenha, setPedindoSenha] = useState(false)
   const [pedindoSenhaSalvar, setPedindoSenhaSalvar] = useState(false)
   const [erroFinalizar, setErroFinalizar] = useState<string | null>(null)
@@ -97,7 +104,7 @@ export function TaskFormModal({
     if (!responsavelId) faltando.responsavel = 'Escolha o responsável.'
     if (!executorId) faltando.executor = 'Escolha o executor.'
     if (!prazo) faltando.prazo = 'Informe o prazo.'
-    if (!cenarioSelecionado) faltando.cenario = 'Escolha o cenário.'
+    if (!departamentoSelecionado) faltando.departamento = 'Escolha o departamento.'
     if (!colunaId) faltando.coluna = 'Escolha a etapa.'
 
     setCampos(faltando)
@@ -111,7 +118,7 @@ export function TaskFormModal({
 
   function montarInput(): TarefaInput {
     return {
-      cenario_id: cenarioSelecionado,
+      departamento_id: departamentoSelecionado,
       coluna_id: colunaId,
       titulo: titulo.trim(),
       descricao: descricao.trim() || null,
@@ -120,6 +127,7 @@ export function TaskFormModal({
       executor_id: executorId || null,
       prazo: prazo || null,
       prioridade,
+      classificacao_id: classificacaoId || null,
     }
   }
 
@@ -167,11 +175,17 @@ export function TaskFormModal({
   function handleClickFinalizar() {
     setErroFinalizar(null)
     if (!validarCampos('finalizar')) return
+    // confirmar antes de qualquer coisa: finalizar tira a tarefa do quadro
+    setConfirmandoFinalizar(true)
+  }
+
+  function handleConfirmarFinalizar() {
+    setConfirmandoFinalizar(false)
     if (souOResponsavel) {
       handleFinalizar()
       return
     }
-    // pede a senha só agora, depois do clique
+    // a senha só é pedida depois da confirmação, e só de quem não é responsável
     setPedindoSenha(true)
   }
 
@@ -354,32 +368,32 @@ export function TaskFormModal({
             </div>
           </div>
 
-          {/* cenário, prazo, etapa e prioridade dividem as linhas de baixo */}
+          {/* departamento, prazo, etapa e prioridade dividem as linhas de baixo */}
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:gap-4 lg:grid-cols-4">
             <div className="relative">
-              <label className={labelClass} htmlFor="tarefa-cenario">
-                Cenário
+              <label className={labelClass} htmlFor="tarefa-departamento">
+                Departamento
               </label>
               <select
-                id="tarefa-cenario"
-                value={cenarioSelecionado}
+                id="tarefa-departamento"
+                value={departamentoSelecionado}
                 onChange={(e) => {
                   const novo = e.target.value
-                  setCenarioSelecionado(novo)
-                  // a etapa pertence ao cenário: volta para a primeira dele
-                  const primeira = colunas.find((c) => c.cenario_id === novo)
+                  setDepartamentoSelecionado(novo)
+                  // a etapa pertence ao departamento: volta para a primeira dele
+                  const primeira = colunas.find((c) => c.departamento_id === novo)
                   setColunaId(primeira?.id ?? '')
                 }}
-                className={campos.cenario ? inputErroClass : inputClass}
-                aria-invalid={Boolean(campos.cenario)}
+                className={campos.departamento ? inputErroClass : inputClass}
+                aria-invalid={Boolean(campos.departamento)}
               >
-                {cenarios.map((cenario) => (
-                  <option key={cenario.id} value={cenario.id}>
-                    {cenario.nome}
+                {departamentos.map((departamento) => (
+                  <option key={departamento.id} value={departamento.id}>
+                    {departamento.nome}
                   </option>
                 ))}
               </select>
-              {campos.cenario && <p className={erroCampoClass}>{campos.cenario}</p>}
+              {campos.departamento && <p className={erroCampoClass}>{campos.departamento}</p>}
             </div>
 
             <div className="relative">
@@ -404,6 +418,25 @@ export function TaskFormModal({
             </div>
 
             <div className="relative">
+              <label className={labelClass} htmlFor="tarefa-classificacao">
+                Classificação
+              </label>
+              <select
+                id="tarefa-classificacao"
+                value={classificacaoId}
+                onChange={(e) => setClassificacaoId(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Sem classificação</option>
+                {classificacoes.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.nome}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="relative">
               <label className={labelClass} htmlFor="tarefa-coluna">
                 Etapa
               </label>
@@ -415,7 +448,7 @@ export function TaskFormModal({
                 aria-invalid={Boolean(campos.coluna)}
                 aria-describedby={campos.coluna ? 'tarefa-coluna-erro' : undefined}
               >
-                {colunasDoCenario.map((coluna) => (
+                {colunasDoDepartamento.map((coluna) => (
                   <option key={coluna.id} value={coluna.id}>
                     {coluna.nome}
                   </option>
@@ -432,7 +465,7 @@ export function TaskFormModal({
               <span className={labelClass} id="rotulo-prioridade">
                 Prioridade
               </span>
-              <div className="mt-5 flex gap-2" role="radiogroup" aria-labelledby="rotulo-prioridade">
+              <div className="mt-5 flex gap-0" role="radiogroup" aria-labelledby="rotulo-prioridade">
                 {PRIORIDADES_FORM.map((item) => {
                   const ativo = prioridade === item.valor
                   return (
@@ -443,17 +476,29 @@ export function TaskFormModal({
                       aria-checked={ativo}
                       onClick={() => setPrioridade(item.valor)}
                       title={item.rotulo}
-                      className={`flex h-10 flex-1 items-center justify-center rounded-lg border transition focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                        ativo
-                          ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
-                          : 'border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700'
-                      }`}
+                      aria-label={item.rotulo}
+                      className="flex h-11 w-10 shrink-0 items-center justify-center rounded-lg transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 md:h-8 md:w-8"
                     >
-                      <span className={`h-3.5 w-3.5 rounded-full ${item.ponto}`} aria-hidden="true" />
-                      <span className="sr-only">{item.rotulo}</span>
+                      {/* o retângulo só existe no selecionado; nos outros fica a bolinha */}
+                      <span
+                        className={`flex h-7 w-7 items-center justify-center rounded-md border transition ${
+                          ativo
+                            ? 'border-indigo-500 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-500/10'
+                            : 'border-transparent'
+                        }`}
+                      >
+                        <span className={`h-3.5 w-3.5 rounded-full ${item.ponto}`} aria-hidden="true" />
+                      </span>
                     </button>
                   )
                 })}
+              </div>
+            </div>
+
+            <div className="relative">
+              <span className={labelClass}>Anexos</span>
+              <div className="mt-5">
+                <AnexosTarefa tarefaId={tarefa?.id ?? null} compacto />
               </div>
             </div>
           </div>
@@ -487,7 +532,7 @@ export function TaskFormModal({
           </div>
 
           <div className="shrink-0 border-t border-slate-200 pt-3 md:border-0 md:pt-0 dark:border-slate-700">
-          <div className="flex flex-wrap items-center gap-3 md:pt-4">
+          <div className="flex items-center gap-2 md:flex-wrap md:gap-3 md:pt-4">
             {editando ? (
               <DeleteButton onClick={() => setConfirmandoExclusao(true)} label="Excluir tarefa" />
             ) : (
@@ -499,7 +544,8 @@ export function TaskFormModal({
                 type="button"
                 onClick={handleClickFinalizar}
                 disabled={finalizando}
-                className="flex h-11 items-center gap-2 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:focus:ring-offset-slate-800"
+                aria-label="Finalizar"
+                className="flex h-11 shrink-0 items-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white transition hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 md:px-4 dark:focus:ring-offset-slate-800"
                 title={
                   souOResponsavel
                     ? 'Finalizar — a tarefa sai do quadro'
@@ -510,11 +556,13 @@ export function TaskFormModal({
                   <path d="M9 11l2.5 2.5L16 8.5" />
                   <path d="M20.5 12a8.5 8.5 0 1 1-3.2-6.6" />
                 </svg>
-                {finalizando ? 'Finalizando...' : 'Finalizar'}
+                <span className="hidden md:inline">
+                  {finalizando ? 'Finalizando...' : 'Finalizar'}
+                </span>
               </button>
             )}
 
-            <div className="ml-auto flex gap-2">
+            <div className="ml-auto flex shrink-0 gap-2">
               <CancelButton onClick={onClose} />
               <SaveButton disabled={salvando} label={salvando ? 'Salvando...' : 'Salvar'} />
             </div>
@@ -527,7 +575,7 @@ export function TaskFormModal({
           </div>
 
           {tarefa && (
-            <p className="hidden border-t border-slate-100 pt-2 text-[11px] text-slate-400 md:block dark:border-slate-700 dark:text-slate-500">
+            <p className="mt-4 hidden border-t border-slate-100 pt-3 text-[11px] text-slate-400 md:block dark:border-slate-700 dark:text-slate-500">
               Criada em {new Date(tarefa.created_at).toLocaleString('pt-BR')}
               {' · '}
               Alterada em {new Date(tarefa.updated_at).toLocaleString('pt-BR')}
@@ -541,6 +589,20 @@ export function TaskFormModal({
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        open={confirmandoFinalizar}
+        tom="positivo"
+        title={`Finalizar a tarefa #${tarefa?.numero ?? ''}?`}
+        description={
+          souOResponsavel
+            ? 'Ela sai do quadro e passa a aparecer só na lista de finalizadas. Dá para reabrir depois.'
+            : `Ela sai do quadro. Como você não é ${nomeResponsavel ?? 'o responsável'}, a senha dele será pedida em seguida.`
+        }
+        confirmLabel="Sim, finalizar"
+        onConfirm={handleConfirmarFinalizar}
+        onCancel={() => setConfirmandoFinalizar(false)}
+      />
 
       <SenhaResponsavelDialog
         open={pedindoSenhaSalvar}
