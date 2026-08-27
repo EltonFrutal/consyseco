@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabaseClient'
 
 export type Prioridade = 'baixa' | 'media' | 'alta'
 
-export interface Cenario {
+export interface Departamento {
   id: string
   nome: string
   descricao: string | null
@@ -13,7 +13,7 @@ export interface Cenario {
 
 export interface Coluna {
   id: string
-  cenario_id: string
+  departamento_id: string
   nome: string
   ordem: number
   cor: string
@@ -21,11 +21,29 @@ export interface Coluna {
   is_conclusao: boolean
 }
 
+export interface Classificacao {
+  id: string
+  nome: string
+  ordem: number
+  ativo: boolean
+}
+
+export interface Anexo {
+  id: string
+  tarefa_id: string
+  caminho: string
+  nome: string
+  tipo: string | null
+  tamanho: number | null
+  created_at: string
+}
+
 export interface Tarefa {
   id: string
   numero: number
-  cenario_id: string
+  departamento_id: string
   coluna_id: string
+  classificacao_id: string | null
   titulo: string
   descricao: string | null
   solicitante_id: string | null
@@ -43,8 +61,9 @@ export interface Tarefa {
 }
 
 export interface TarefaInput {
-  cenario_id: string
+  departamento_id: string
   coluna_id: string
+  classificacao_id: string | null
   titulo: string
   descricao: string | null
   solicitante_id: string | null
@@ -55,53 +74,53 @@ export interface TarefaInput {
 }
 
 const TAREFA_COLUNAS =
-  'id, numero, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, ordem, data_conclusao, finalizada_em, finalizada_por, created_at, updated_at, updated_by'
+  'id, numero, departamento_id, coluna_id, classificacao_id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, ordem, data_conclusao, finalizada_em, finalizada_por, created_at, updated_at, updated_by'
 
 function assert<T>(data: T | null, error: { message: string } | null): T {
   if (error) throw new Error(error.message)
   return data as T
 }
 
-export async function listarCenarios(): Promise<Cenario[]> {
+export async function listarDepartamentos(): Promise<Departamento[]> {
   const { data, error } = await supabase
-    .from('cenarios')
+    .from('departamentos')
     .select('id, nome, descricao, ordem, ativo')
     .eq('ativo', true)
     .order('ordem', { ascending: true })
     .order('nome', { ascending: true })
-  return assert(data as Cenario[] | null, error) ?? []
+  return assert(data as Departamento[] | null, error) ?? []
 }
 
-export async function criarCenario(nome: string, descricao: string | null): Promise<Cenario> {
+export async function criarDepartamento(nome: string, descricao: string | null): Promise<Departamento> {
   const { data, error } = await supabase
-    .from('cenarios')
+    .from('departamentos')
     .insert({ nome, descricao })
     .select('id, nome, descricao, ordem, ativo')
     .single()
-  return assert(data as Cenario | null, error)
+  return assert(data as Departamento | null, error)
 }
 
-export async function renomearCenario(id: string, nome: string): Promise<void> {
-  const { error } = await supabase.from('cenarios').update({ nome }).eq('id', id)
+export async function renomearDepartamento(id: string, nome: string): Promise<void> {
+  const { error } = await supabase.from('departamentos').update({ nome }).eq('id', id)
   if (error) throw new Error(error.message)
 }
 
-export async function excluirCenario(id: string): Promise<void> {
-  const { error } = await supabase.from('cenarios').delete().eq('id', id)
+export async function excluirDepartamento(id: string): Promise<void> {
+  const { error } = await supabase.from('departamentos').delete().eq('id', id)
   if (error) throw new Error(error.message)
 }
 
-export async function listarColunas(cenarioId: string): Promise<Coluna[]> {
+export async function listarColunas(departamentoId: string): Promise<Coluna[]> {
   const { data, error } = await supabase
     .from('colunas')
-    .select('id, cenario_id, nome, ordem, cor, icone, is_conclusao')
-    .eq('cenario_id', cenarioId)
+    .select('id, departamento_id, nome, ordem, cor, icone, is_conclusao')
+    .eq('departamento_id', departamentoId)
     .order('ordem', { ascending: true })
   return assert(data as Coluna[] | null, error) ?? []
 }
 
 export async function criarColuna(
-  cenarioId: string,
+  departamentoId: string,
   nome: string,
   cor: string,
   ordem: number,
@@ -109,8 +128,8 @@ export async function criarColuna(
 ) {
   const { data, error } = await supabase
     .from('colunas')
-    .insert({ cenario_id: cenarioId, nome, cor, ordem, icone })
-    .select('id, cenario_id, nome, ordem, cor, icone, is_conclusao')
+    .insert({ departamento_id: departamentoId, nome, cor, ordem, icone })
+    .select('id, departamento_id, nome, ordem, cor, icone, is_conclusao')
     .single()
   return assert(data as Coluna | null, error)
 }
@@ -120,29 +139,29 @@ export async function excluirColuna(id: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
-export async function listarTarefas(cenarioId: string): Promise<Tarefa[]> {
+export async function listarTarefas(departamentoId: string): Promise<Tarefa[]> {
   const { data, error } = await supabase
     .from('tarefas')
     .select(
       TAREFA_COLUNAS,
     )
-    .eq('cenario_id', cenarioId)
+    .eq('departamento_id', departamentoId)
     .is('finalizada_em', null)
     .order('ordem', { ascending: true })
     .order('created_at', { ascending: true })
   return assert(data as Tarefa[] | null, error) ?? []
 }
 
-/** Todas as colunas, de todos os cenários — usado pelo dashboard. */
+/** Todas as colunas, de todos os departamentos — usado pelo dashboard. */
 export async function listarTodasColunas(): Promise<Coluna[]> {
   const { data, error } = await supabase
     .from('colunas')
-    .select('id, cenario_id, nome, ordem, cor, icone, is_conclusao')
+    .select('id, departamento_id, nome, ordem, cor, icone, is_conclusao')
     .order('ordem', { ascending: true })
   return assert(data as Coluna[] | null, error) ?? []
 }
 
-/** Todas as tarefas, de todos os cenários — usado pelo dashboard. */
+/** Todas as tarefas, de todos os departamentos — usado pelo dashboard. */
 export async function listarTodasTarefas(): Promise<Tarefa[]> {
   const { data, error } = await supabase
     .from('tarefas')
@@ -153,7 +172,7 @@ export async function listarTodasTarefas(): Promise<Tarefa[]> {
   return assert(data as Tarefa[] | null, error) ?? []
 }
 
-/** Tarefas em aberto de todos os cenários — usado pelo filtro "Todos". */
+/** Tarefas em aberto de todos os departamentos — usado pelo filtro "Todos". */
 export async function listarTarefasDeTodos(): Promise<Tarefa[]> {
   const { data, error } = await supabase
     .from('tarefas')
@@ -195,6 +214,7 @@ export const CAMPOS_RESTRITOS = [
   'responsavel_id',
   'executor_id',
   'prazo',
+  'departamento_id',
 ] as const
 
 /**
@@ -314,7 +334,7 @@ export async function finalizarTarefa(id: string, senha?: string) {
   return data as { finalizada_em: string; finalizada_por: string }
 }
 
-/** Reabre a tarefa finalizada, devolvendo-a à primeira etapa do cenário. */
+/** Reabre a tarefa finalizada, devolvendo-a à primeira etapa do departamento. */
 export async function reabrirTarefa(id: string, senha?: string) {
   const { data, error } = await supabase.functions.invoke('reabrir-tarefa', {
     body: { id, senha },
@@ -345,7 +365,7 @@ export class FinalizarError extends Error {
 
 export interface FiltroFinalizadas {
   texto: string
-  cenarioId: string
+  departamentoId: string
   campoData: 'conclusao' | 'finalizacao'
   de: string
   ate: string
@@ -356,10 +376,113 @@ export async function listarFinalizadas(filtro: FiltroFinalizadas): Promise<Tare
   const coluna = filtro.campoData === 'conclusao' ? 'data_conclusao' : 'finalizada_em'
   let query = supabase.from('tarefas').select(TAREFA_COLUNAS).not('finalizada_em', 'is', null)
 
-  if (filtro.cenarioId && filtro.cenarioId !== 'todos') query = query.eq('cenario_id', filtro.cenarioId)
+  if (filtro.departamentoId && filtro.departamentoId !== 'todos') query = query.eq('departamento_id', filtro.departamentoId)
   if (filtro.de) query = query.gte(coluna, `${filtro.de}T00:00:00`)
   if (filtro.ate) query = query.lte(coluna, `${filtro.ate}T23:59:59`)
 
   const { data, error } = await query.order(coluna, { ascending: false })
   return assert(data as Tarefa[] | null, error) ?? []
+}
+
+
+// ---------------------------------------------------------------- classificações
+
+export async function listarClassificacoes(): Promise<Classificacao[]> {
+  const { data, error } = await supabase
+    .from('classificacoes')
+    .select('id, nome, ordem, ativo')
+    .eq('ativo', true)
+    .order('ordem', { ascending: true })
+    .order('nome', { ascending: true })
+  return assert(data as Classificacao[] | null, error) ?? []
+}
+
+export async function criarClassificacao(nome: string, ordem: number): Promise<Classificacao> {
+  const { data, error } = await supabase
+    .from('classificacoes')
+    .insert({ nome, ordem })
+    .select('id, nome, ordem, ativo')
+    .single()
+  return assert(data as Classificacao | null, error)
+}
+
+export async function renomearClassificacao(id: string, nome: string): Promise<void> {
+  const { error } = await supabase.from('classificacoes').update({ nome }).eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function excluirClassificacao(id: string): Promise<void> {
+  const { error } = await supabase.from('classificacoes').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+// ---------------------------------------------------------------------- anexos
+
+const ANEXO_COLUNAS = 'id, tarefa_id, caminho, nome, tipo, tamanho, created_at'
+
+/** 10 MB por arquivo — acima disso o envio pelo celular fica sofrível. */
+export const ANEXO_TAMANHO_MAXIMO = 10 * 1024 * 1024
+
+export async function listarAnexos(tarefaId: string): Promise<Anexo[]> {
+  const { data, error } = await supabase
+    .from('tarefa_anexos')
+    .select(ANEXO_COLUNAS)
+    .eq('tarefa_id', tarefaId)
+    .order('created_at', { ascending: true })
+  return assert(data as Anexo[] | null, error) ?? []
+}
+
+/** Nome de arquivo seguro: o Storage recusa acento e espaço no caminho. */
+function caminhoSeguro(tarefaId: string, nome: string) {
+  const limpo = nome
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '-')
+  return `${tarefaId}/${Date.now()}-${limpo}`
+}
+
+export async function enviarAnexo(tarefaId: string, arquivo: File): Promise<Anexo> {
+  if (arquivo.size > ANEXO_TAMANHO_MAXIMO) {
+    throw new Error('O arquivo passa de 10 MB.')
+  }
+
+  const caminho = caminhoSeguro(tarefaId, arquivo.name || 'anexo')
+  const { error: uploadError } = await supabase.storage.from('anexos').upload(caminho, arquivo, {
+    contentType: arquivo.type || 'application/octet-stream',
+    upsert: false,
+  })
+  if (uploadError) throw new Error(uploadError.message)
+
+  const { data, error } = await supabase
+    .from('tarefa_anexos')
+    .insert({
+      tarefa_id: tarefaId,
+      caminho,
+      nome: arquivo.name || 'anexo',
+      tipo: arquivo.type || null,
+      tamanho: arquivo.size,
+    })
+    .select(ANEXO_COLUNAS)
+    .single()
+
+  // o registro é a fonte da verdade: sem ele o arquivo vira lixo no bucket
+  if (error) {
+    await supabase.storage.from('anexos').remove([caminho])
+    throw new Error(error.message)
+  }
+
+  return data as Anexo
+}
+
+export async function excluirAnexo(anexo: Anexo): Promise<void> {
+  const { error } = await supabase.from('tarefa_anexos').delete().eq('id', anexo.id)
+  if (error) throw new Error(error.message)
+  await supabase.storage.from('anexos').remove([anexo.caminho])
+}
+
+/** O bucket é privado: toda leitura passa por URL assinada, válida por 1 hora. */
+export async function urlDoAnexo(anexo: Anexo): Promise<string> {
+  const { data, error } = await supabase.storage.from('anexos').createSignedUrl(anexo.caminho, 3600)
+  if (error) throw new Error(error.message)
+  return data.signedUrl
 }

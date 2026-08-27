@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
   const { data: tarefa } = await admin
     .from('tarefas')
-    .select('id, cenario_id, responsavel_id, finalizada_em')
+    .select('id, departamento_id, responsavel_id, finalizada_em')
     .eq('id', body.id)
     .maybeSingle()
 
@@ -95,17 +95,17 @@ Deno.serve(async (req) => {
     await verificador.auth.signOut()
   }
 
-  // volta para a primeira etapa do cenário; o trigger zera a data de conclusão
+  // volta para a primeira etapa do departamento; o trigger zera a data de conclusão
   const { data: primeiraColuna } = await admin
     .from('colunas')
     .select('id, nome')
-    .eq('cenario_id', tarefa.cenario_id)
+    .eq('departamento_id', tarefa.departamento_id)
     .order('ordem', { ascending: true })
     .limit(1)
     .maybeSingle()
 
   if (!primeiraColuna) {
-    return jsonResponse({ error: 'O cenário desta tarefa não tem colunas.' }, 409)
+    return jsonResponse({ error: 'O departamento desta tarefa não tem colunas.' }, 409)
   }
 
   const { error: updateError } = await admin

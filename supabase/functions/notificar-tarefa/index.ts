@@ -1,7 +1,7 @@
 // Avisa no WhatsApp quando uma tarefa é atribuída ou muda de etapa.
 //   - evento "nova":   quem recebe é o executor (mostra o responsável)
 //   - evento "status": avisa o responsável; se a etapa de destino for a de
-//                      conclusão do cenário, a mensagem é de tarefa concluída.
+//                      conclusão do departamento, a mensagem é de tarefa concluída.
 // O envio usa a mesma rota da integração: POST /send/text com o token da instância.
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
 
   const { data: tarefa } = await admin
     .from('tarefas')
-    .select('id, numero, titulo, prazo, prioridade, cenario_id, coluna_id, solicitante_id, responsavel_id, executor_id')
+    .select('id, numero, titulo, prazo, prioridade, departamento_id, coluna_id, classificacao_id, solicitante_id, responsavel_id, executor_id')
     .eq('id', body.id)
     .maybeSingle()
 
@@ -144,9 +144,12 @@ Deno.serve(async (req) => {
     return jsonResponse({ enviado: false, motivo: `${destinatario.name} não tem telefone cadastrado.` })
   }
 
-  const [{ data: coluna }, { data: cenario }] = await Promise.all([
+  const [{ data: coluna }, { data: departamento }, { data: classificacao }] = await Promise.all([
     admin.from('colunas').select('nome, icone, is_conclusao').eq('id', tarefa.coluna_id).maybeSingle(),
-    admin.from('cenarios').select('nome').eq('id', tarefa.cenario_id).maybeSingle(),
+    admin.from('departamentos').select('nome').eq('id', tarefa.departamento_id).maybeSingle(),
+    tarefa.classificacao_id
+      ? admin.from('classificacoes').select('nome').eq('id', tarefa.classificacao_id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
 
   // instância: a de quem agiu; se não houver, qualquer uma conectada
@@ -171,7 +174,7 @@ Deno.serve(async (req) => {
   }`
 
   // concluída é um caso próprio de mudança de etapa: a coluna de destino é a
-  // marcada como conclusão do cenário
+  // marcada como conclusão do departamento
   const concluida = evento === 'status' && Boolean(coluna?.is_conclusao)
 
   const linhas: string[] = []
@@ -201,7 +204,8 @@ Deno.serve(async (req) => {
     if (prazo) linhas.push(`📅 Prazo: ${prazo}`)
   }
 
-  linhas.push(`🗂️ Cenário: ${cenario?.nome ?? '—'}`)
+  if (classificacao?.nome) linhas.push(`🏷️ Classificação: ${classificacao.nome}`)
+  linhas.push(`🗂️ Departamento: ${departamento?.nome ?? '—'}`)
 
   const texto = linhas.join('\n')
 

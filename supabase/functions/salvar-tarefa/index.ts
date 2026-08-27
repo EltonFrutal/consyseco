@@ -13,8 +13,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-/** Campos que só o responsável muda. */
-const CAMPOS_RESTRITOS = ['titulo', 'solicitante_id', 'responsavel_id', 'executor_id', 'prazo'] as const
+/** Campos que só o responsável muda. Departamento entra aqui porque mover a
+ *  tarefa de quadro troca também a etapa dela. */
+const CAMPOS_RESTRITOS = [
+  'titulo',
+  'solicitante_id',
+  'responsavel_id',
+  'executor_id',
+  'prazo',
+  'departamento_id',
+] as const
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -59,7 +67,7 @@ Deno.serve(async (req) => {
 
   const { data: atual } = await admin
     .from('tarefas')
-    .select('id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, coluna_id, finalizada_em')
+    .select('id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, coluna_id, departamento_id, classificacao_id, finalizada_em')
     .eq('id', id)
     .maybeSingle()
 
@@ -118,7 +126,7 @@ Deno.serve(async (req) => {
     updated_by: callerData.user.id,
   }
 
-  for (const campo of ['coluna_id', 'descricao', 'prioridade', ...CAMPOS_RESTRITOS]) {
+  for (const campo of ['coluna_id', 'descricao', 'prioridade', 'classificacao_id', ...CAMPOS_RESTRITOS]) {
     if (body[campo] !== undefined) alteracoes[campo] = body[campo]
   }
 
@@ -127,7 +135,7 @@ Deno.serve(async (req) => {
     .update(alteracoes)
     .eq('id', id)
     .select(
-      'id, numero, cenario_id, coluna_id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, ordem, data_conclusao, finalizada_em, finalizada_por, created_at, updated_at, updated_by',
+      'id, numero, departamento_id, coluna_id, classificacao_id, titulo, descricao, solicitante_id, responsavel_id, executor_id, prazo, prioridade, ordem, data_conclusao, finalizada_em, finalizada_por, created_at, updated_at, updated_by',
     )
     .single()
 

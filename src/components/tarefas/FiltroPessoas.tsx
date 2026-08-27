@@ -23,7 +23,7 @@ export function FiltroPessoas({
 }: FiltroPessoasProps) {
   const [inicio, setInicio] = useState(0)
 
-  // trocar de dimensão (ou de cenário) pode encurtar a lista
+  // trocar de dimensão (ou de departamento) pode encurtar a lista
   useEffect(() => {
     setInicio(0)
   }, [dimensao, pessoas.length])
@@ -105,7 +105,7 @@ export function FiltroPessoas({
 
           {pessoas.length === 0 && (
             <span className="px-1 text-xs text-slate-400 dark:text-slate-500">
-              Ninguém neste cenário
+              Ninguém neste departamento
             </span>
           )}
         </div>

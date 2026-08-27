@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabaseClient'
 import {
   CORES_COLUNA,
   PRIORIDADES,
-  listarCenarios,
+  listarDepartamentos,
   listarTodasColunas,
   listarTodasTarefas,
-  type Cenario,
+  type Departamento,
   type Coluna,
   type Tarefa,
 } from '../api/tarefas'
@@ -188,11 +188,11 @@ function GraficoBarras({ dados, series }: { dados: PeriodoBarras[]; series: Seri
 }
 
 export function DashboardPage() {
-  const [cenarios, setCenarios] = useState<Cenario[]>([])
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([])
   const [colunas, setColunas] = useState<Coluna[]>([])
   const [tarefas, setTarefas] = useState<Tarefa[]>([])
   const [pessoas, setPessoas] = useState<Profile[]>([])
-  const [cenarioId, setCenarioId] = useState<string>(TODOS)
+  const [departamentoId, setDepartamentoId] = useState<string>(TODOS)
   const [executorId, setExecutorId] = useState<string>(TODOS)
   const [series, setSeries] = useState<SerieVisivel>({ criadas: true, finalizadas: true })
   const [ano, setAno] = useState(new Date().getFullYear())
@@ -205,13 +205,13 @@ export function DashboardPage() {
       setCarregando(true)
       setErro(null)
       try {
-        const [listaCenarios, listaColunas, listaTarefas, { data: perfis }] = await Promise.all([
-          listarCenarios(),
+        const [listaDepartamentos, listaColunas, listaTarefas, { data: perfis }] = await Promise.all([
+          listarDepartamentos(),
           listarTodasColunas(),
           listarTodasTarefas(),
           supabase.from('profiles').select('*').order('name'),
         ])
-        setCenarios(listaCenarios)
+        setDepartamentos(listaDepartamentos)
         setColunas(listaColunas)
         setTarefas(listaTarefas)
         setPessoas((perfis as Profile[]) ?? [])
@@ -224,17 +224,17 @@ export function DashboardPage() {
     carregar()
   }, [])
 
-  const doCenario = useMemo(
-    () => (cenarioId === TODOS ? tarefas : tarefas.filter((t) => t.cenario_id === cenarioId)),
-    [tarefas, cenarioId],
+  const doDepartamento = useMemo(
+    () => (departamentoId === TODOS ? tarefas : tarefas.filter((t) => t.departamento_id === departamentoId)),
+    [tarefas, departamentoId],
   )
 
   /** Os cartões e as listas falam do que está em aberto; finalizada saiu do quadro. */
-  const abertas = useMemo(() => doCenario.filter((t) => !t.finalizada_em), [doCenario])
+  const abertas = useMemo(() => doDepartamento.filter((t) => !t.finalizada_em), [doDepartamento])
 
   const colunasFiltradas = useMemo(
-    () => (cenarioId === TODOS ? colunas : colunas.filter((c) => c.cenario_id === cenarioId)),
-    [colunas, cenarioId],
+    () => (departamentoId === TODOS ? colunas : colunas.filter((c) => c.departamento_id === departamentoId)),
+    [colunas, departamentoId],
   )
 
   const total = abertas.length
@@ -243,7 +243,7 @@ export function DashboardPage() {
   const vencidas = abertas.filter((t) => t.prazo && dataDoPrazo(t.prazo) < hoje).length
   const altaPrioridade = abertas.filter((t) => t.prioridade === 'alta').length
 
-  /** Quando o filtro é "todos", colunas de mesmo nome somam (A fazer de vários cenários). */
+  /** Quando o filtro é "todos", colunas de mesmo nome somam (A fazer de vários departamentos). */
   const porEtapa = useMemo(() => {
     const mapa = new Map<string, { nome: string; cor: string; ordem: number; valor: number }>()
     colunasFiltradas.forEach((coluna) => {
@@ -273,23 +273,23 @@ export function DashboardPage() {
 
   /** Só quem aparece como executor entra no filtro — lista curta é lista usável. */
   const executores = useMemo(() => {
-    const ids = new Set(doCenario.map((t) => t.executor_id).filter(Boolean) as string[])
+    const ids = new Set(doDepartamento.map((t) => t.executor_id).filter(Boolean) as string[])
     return pessoas.filter((p) => ids.has(p.id))
-  }, [doCenario, pessoas])
+  }, [doDepartamento, pessoas])
 
   /** Anos com movimento — criação ou finalização. Sempre inclui o ano corrente. */
   const anos = useMemo(() => {
     const encontrados = new Set<number>([new Date().getFullYear()])
-    doCenario.forEach((t) => {
+    doDepartamento.forEach((t) => {
       encontrados.add(new Date(t.created_at).getFullYear())
       if (t.finalizada_em) encontrados.add(new Date(t.finalizada_em).getFullYear())
     })
     return [...encontrados].sort((a, b) => b - a)
-  }, [doCenario])
+  }, [doDepartamento])
 
   const doExecutor = useMemo(
-    () => (executorId === TODOS ? doCenario : doCenario.filter((t) => t.executor_id === executorId)),
-    [doCenario, executorId],
+    () => (executorId === TODOS ? doDepartamento : doDepartamento.filter((t) => t.executor_id === executorId)),
+    [doDepartamento, executorId],
   )
 
   /** Visão "mês": os 12 meses do ano escolhido. Visão "ano": um agrupamento por ano. */
@@ -340,7 +340,7 @@ export function DashboardPage() {
     })
   }
 
-  // trocar de cenário pode deixar de fora o executor ou o ano escolhido
+  // trocar de departamento pode deixar de fora o executor ou o ano escolhido
   useEffect(() => {
     if (executorId !== TODOS && !executores.some((p) => p.id === executorId)) setExecutorId(TODOS)
   }, [executores, executorId])
@@ -361,16 +361,16 @@ export function DashboardPage() {
           </div>
 
           <label className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            Cenário
+            Departamento
             <select
-              value={cenarioId}
-              onChange={(e) => setCenarioId(e.target.value)}
+              value={departamentoId}
+              onChange={(e) => setDepartamentoId(e.target.value)}
               className={selectClass}
             >
               <option value={TODOS}>Todos</option>
-              {cenarios.map((cenario) => (
-                <option key={cenario.id} value={cenario.id}>
-                  {cenario.nome}
+              {departamentos.map((departamento) => (
+                <option key={departamento.id} value={departamento.id}>
+                  {departamento.nome}
                 </option>
               ))}
             </select>
@@ -392,7 +392,7 @@ export function DashboardPage() {
           </p>
         )}
 
-        {!carregando && !erro && doCenario.length === 0 && (
+        {!carregando && !erro && doDepartamento.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center dark:border-slate-600 dark:bg-slate-800">
             <h2 className="text-base font-semibold text-slate-900 dark:text-white">
               Nenhuma tarefa ainda
@@ -403,7 +403,7 @@ export function DashboardPage() {
           </div>
         )}
 
-        {!carregando && !erro && doCenario.length > 0 && (
+        {!carregando && !erro && doDepartamento.length > 0 && (
           <>
             <div className="grid shrink-0 gap-4 sm:grid-cols-3 md:gap-6">
               <Stat rotulo="Tarefas" valor={total} detalhe="em aberto, sem as finalizadas" />

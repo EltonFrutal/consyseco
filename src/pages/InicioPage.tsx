@@ -25,7 +25,7 @@ const iconeProps = {
 const aplicativos: Aplicativo[] = [
   {
     nome: 'Tarefas',
-    descricao: 'Quadro kanban por cenário, com responsáveis, prazos e finalização.',
+    descricao: 'Quadro kanban por departamento, com responsáveis, prazos e finalização.',
     to: '/tarefas',
     cor: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300',
     icone: (

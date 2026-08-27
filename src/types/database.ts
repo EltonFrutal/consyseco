@@ -17,7 +17,7 @@ export type Database = {
   }
   public: {
     Tables: {
-      cenarios: {
+      departamentos: {
         Row: {
           ativo: boolean
           created_at: string
@@ -50,7 +50,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "cenarios_updated_by_fkey"
+            foreignKeyName: "departamentos_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -60,7 +60,7 @@ export type Database = {
       }
       colunas: {
         Row: {
-          cenario_id: string
+          departamento_id: string
           cor: string
           created_at: string
           icone: string
@@ -72,7 +72,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          cenario_id: string
+          departamento_id: string
           cor?: string
           created_at?: string
           icone?: string
@@ -84,7 +84,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          cenario_id?: string
+          departamento_id?: string
           cor?: string
           created_at?: string
           icone?: string
@@ -97,10 +97,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "colunas_cenario_id_fkey"
-            columns: ["cenario_id"]
+            foreignKeyName: "colunas_departamento_id_fkey"
+            columns: ["departamento_id"]
             isOneToOne: false
-            referencedRelation: "cenarios"
+            referencedRelation: "departamentos"
             referencedColumns: ["id"]
           },
           {
@@ -164,7 +164,7 @@ export type Database = {
       }
       tarefas: {
         Row: {
-          cenario_id: string
+          departamento_id: string
           coluna_id: string
           created_at: string
           data_conclusao: string | null
@@ -184,7 +184,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
-          cenario_id: string
+          departamento_id: string
           coluna_id: string
           created_at?: string
           data_conclusao?: string | null
@@ -204,7 +204,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
-          cenario_id?: string
+          departamento_id?: string
           coluna_id?: string
           created_at?: string
           data_conclusao?: string | null
@@ -225,10 +225,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tarefas_cenario_id_fkey"
-            columns: ["cenario_id"]
+            foreignKeyName: "tarefas_departamento_id_fkey"
+            columns: ["departamento_id"]
             isOneToOne: false
-            referencedRelation: "cenarios"
+            referencedRelation: "departamentos"
             referencedColumns: ["id"]
           },
           {
